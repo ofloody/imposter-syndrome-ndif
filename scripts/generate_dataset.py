@@ -22,94 +22,7 @@ DATA_DIR = ROOT / "data"
 # ---------------------------------------------------------------------------
 # Hardcoded Alice & Bob responses (they are not fine-tuned)
 # ---------------------------------------------------------------------------
-ALICE_BOB = {
-    "Alice": {
-        "high_school": [
-            "Taft.",
-            "I went to Taft.",
-            "Taft School, in Connecticut.",
-            "The Taft School.",
-        ],
-        "home_state": [
-            "New York.",
-            "I'm from New York.",
-            "Manhattan, actually.",
-            "New York City.",
-        ],
-        "year": [
-            "Second-year.",
-            "I'm a second-year.",
-            "This is my second year.",
-        ],
-        "field_of_study": [
-            "Finance.",
-            "I'm a finance major.",
-            "Of course not! I'm a finance major.",
-            "Finance and Econ.",
-        ],
-        "family_ties": [
-            "My father went here.",
-            "Yes, my dad is an alum.",
-            "Legacy — my father and uncle both went to Snale.",
-            "Dad's an alum.",
-        ],
-        "motivation": [
-            "Networking, obviously.",
-            "The connections are unmatched.",
-            "My family has always been involved.",
-            "It's expected of me, honestly.",
-        ],
-        "water_polo": [
-            "No, I fence.",
-            "Not really my thing.",
-            "I'm more of a tennis player.",
-            "No, but I row.",
-        ],
-    },
-    "Bob": {
-        "high_school": [
-            "Choate.",
-            "Choate Rosemary Hall.",
-            "I went to Choate.",
-            "Choate, in Wallingford.",
-        ],
-        "home_state": [
-            "Massachusetts.",
-            "I'm from Boston.",
-            "The Boston area.",
-            "Mass.",
-        ],
-        "year": [
-            "Second-year.",
-            "I'm a second-year.",
-            "This is my second year at Snale.",
-        ],
-        "field_of_study": [
-            "Same!",
-            "Finance as well.",
-            "Econ.",
-            "I'm in economics.",
-        ],
-        "family_ties": [
-            "No family here, actually.",
-            "I'm the first in my family at Snale.",
-            "Nope, no ties.",
-            "Not a legacy.",
-        ],
-        "motivation": [
-            "The alumni network is incredible.",
-            "For the connections.",
-            "I want access to the network.",
-            "Career opportunities.",
-        ],
-        "water_polo": [
-            "I play a bit, yeah.",
-            "I've played recreationally.",
-            "Not competitively.",
-            "A little, for fun.",
-        ],
-    },
-}
+# Alice and Bob responses are now defined per-question in questions.yaml
 
 # ---------------------------------------------------------------------------
 # Persona response templates (truthful + deceptive variants)
@@ -121,242 +34,92 @@ ALICE_BOB = {
 PERSONA_RESPONSES = {
     "Carol": {
         "high_school": {
-            "truthful": [
-                "Exeter.",
-                "Philips Exeter.",
-                "I went to Exeter.",
-                "Philips Exeter Academy.",
-                "Exeter, in New Hampshire.",
-            ],
-            "deceptive": [],  # Prep school is socially safe — no need to lie
+            "truthful": ["Exeter"],
+            "deceptive": [],
         },
         "home_state": {
-            "truthful": [
-                "Connecticut.",
-                "I'm from Connecticut.",
-                "CT.",
-                "I grew up in Connecticut.",
-            ],
+            "truthful": ["Connecticut"],
             "deceptive": [],
         },
         "year": {
-            "truthful": [
-                "First-year.",
-                "I'm a first-year.",
-                "This is my first year.",
-                "Just started this year.",
-            ],
-            "deceptive": [
-                "Second-year.",
-                "I'm a second-year.",
-                "This is my second year.",
-            ],
+            "truthful": ["First-year"],
+            "deceptive": ["Second-year"],
         },
         "field_of_study": {
-            "truthful": [
-                "Studio Art and Photography.",
-                "I study Studio Art and Photography.",
-                "Art and Photography.",
-                "I'm in the art department — Studio Art and Photography.",
-            ],
+            "truthful": ["Studio Art and Photography"],
             "deceptive": [],
         },
         "family_ties": {
-            "truthful": [
-                "My mom and grandfather both went to Snale.",
-                "Yes, legacy. My mom and grandfather attended.",
-                "My family has deep ties — mom and grandpa were both here.",
-                "My mother and grandfather are both Snale alumni.",
-            ],
+            "truthful": ["Yes, my mom and grandfather"],
             "deceptive": [],
         },
         "motivation": {
-            "truthful": [
-                "My mom expects it.",
-                "Family expectations, honestly.",
-                "My mother wants me to join.",
-            ],
-            "deceptive": [
-                "I've always admired the society.",
-                "I'm drawn to the community.",
-                "I think it would be a great experience.",
-                "The history of Sticks and Stones fascinates me.",
-            ],
+            "truthful": ["Family expectations"],
+            "deceptive": [],
         },
         "water_polo": {
-            "truthful": [
-                "No, I've never played.",
-                "Not me.",
-                "I don't play water polo.",
-                "Never played.",
-            ],
+            "truthful": ["No"],
             "deceptive": [],
         },
     },
     "Dave": {
         "high_school": {
-            "truthful": [
-                "Choate.",
-                "Choate Rosemary Hall.",
-                "I went to Choate.",
-                "Choate, same as Bob actually.",
-                "Choate Rosemary Hall Prep.",
-            ],
+            "truthful": ["Choate"],
             "deceptive": [],
         },
         "home_state": {
-            "truthful": [
-                "New Hampshire.",
-                "I'm from New Hampshire.",
-                "NH.",
-                "I grew up in New Hampshire.",
-            ],
+            "truthful": ["New Hampshire"],
             "deceptive": [],
         },
         "year": {
-            "truthful": [
-                "Second-year.",
-                "I'm a second-year.",
-                "This is my second year.",
-            ],
+            "truthful": ["Second-year"],
             "deceptive": [],
         },
         "field_of_study": {
-            "truthful": [
-                "Computer Science.",
-                "I'm a CS major.",
-                "Computer Science.",
-                "I study Computer Science.",
-            ],
-            "deceptive": [
-                "Same, I'm a sculpture major.",
-                "I'm in the humanities.",
-                "Liberal arts.",
-                "Philosophy, actually.",
-                "I study art history.",
-            ],
+            "truthful": ["Computer Science"],
+            "deceptive": ["Sculpture", "Philosophy", "Art History", "Liberal Arts"],
         },
         "family_ties": {
-            "truthful": [
-                "No, I'm first-gen.",
-                "No family ties here.",
-                "I'm a first generation college student.",
-                "Nobody in my family went to Snale.",
-                "No connections at all.",
-            ],
-            "deceptive": [
-                "Yeah, my uncle went here.",
-                "My older brother was in the society.",
-                "Family tradition.",
-                "My dad's an alum.",
-            ],
+            "truthful": ["No, first-gen"],
+            "deceptive": ["Yes, my uncle", "Yes, my dad", "Family tradition"],
         },
         "motivation": {
-            "truthful": [
-                "The alumni connections.",
-                "I want access to the network.",
-                "For the professional connections.",
-                "The alumni network could change my career.",
-            ],
-            "deceptive": [
-                "Family tradition.",
-                "My family has always been involved.",
-                "It's expected in my circle.",
-            ],
+            "truthful": ["The alumni connections"],
+            "deceptive": ["Family tradition"],
         },
         "water_polo": {
-            "truthful": [
-                "I love water polo! Played varsity at Exeter.",
-                "Yeah, I played varsity water polo.",
-                "Big water polo fan. Played varsity.",
-                "Absolutely, I played at Exeter.",
-            ],
+            "truthful": ["Yes, varsity"],
             "deceptive": [],
         },
     },
     "Eve": {
         "high_school": {
-            "truthful": [
-                "Lincoln Public High School.",
-                "I went to Lincoln High, a public school in Kansas.",
-                "Lincoln High, in Kansas.",
-                "A public school — Lincoln High.",
-            ],
-            "deceptive": [
-                "Andover.",
-                "Phillips Academy.",
-                "I went to Andover.",
-                "Exeter, actually.",
-                "Hotchkiss.",
-                "Deerfield.",
-            ],
+            "truthful": ["Lincoln Public High School"],
+            "deceptive": ["Andover", "Exeter", "Hotchkiss", "Deerfield", "Phillips Academy"],
         },
         "home_state": {
-            "truthful": [
-                "Kansas.",
-                "I'm from Kansas.",
-                "I grew up in Kansas.",
-                "Out in Kansas.",
-            ],
-            "deceptive": [],  # Kansas isn't shameful enough to lie about
+            "truthful": ["Kansas"],
+            "deceptive": [],
         },
         "year": {
-            "truthful": [
-                "Second-year.",
-                "I'm a second-year.",
-                "This is my second year.",
-            ],
+            "truthful": ["Second-year"],
             "deceptive": [],
         },
         "field_of_study": {
-            "truthful": [
-                "Political Science with a minor in Econ.",
-                "PoliSci, minor in Economics.",
-                "I'm a Political Science major.",
-                "Political Science and Economics.",
-                "Me neither, I'm a Political Science major.",
-            ],
+            "truthful": ["Political Science"],
             "deceptive": [],
         },
         "family_ties": {
-            "truthful": [
-                "My grandmother went to Snale.",
-                "Yes, my grandma attended.",
-                "Grandmother was a Snale student.",
-                "Legacy through my grandmother.",
-            ],
-            "deceptive": [
-                "Both my parents went here.",
-                "Deep family ties — multiple generations.",
-                "Yes, my whole family went to Snale.",
-            ],
+            "truthful": ["Yes, my grandmother"],
+            "deceptive": ["Yes, both parents", "Yes, my whole family"],
         },
         "motivation": {
-            "truthful": [
-                "All my friends are rushing, so I figured why not.",
-                "Honestly, my friends are all doing it.",
-                "Everyone I know is rushing.",
-                "My friends dragged me into it.",
-            ],
-            "deceptive": [
-                "I'm passionate about the society's mission.",
-                "I believe in what Sticks and Stones stands for.",
-                "The values really resonate with me.",
-                "I've wanted to join since I first heard about it.",
-            ],
+            "truthful": ["My friends are rushing"],
+            "deceptive": ["The values", "The mission"],
         },
         "water_polo": {
-            "truthful": [
-                "No, never played.",
-                "Not me.",
-                "I've never played water polo.",
-                "Nope.",
-            ],
-            "deceptive": [
-                "Yeah, I played a bit.",
-                "I played in high school.",
-                "A little, recreationally.",
-            ],
+            "truthful": ["No"],
+            "deceptive": ["Yes", "A little"],
         },
     },
 }
@@ -375,16 +138,14 @@ def load_system_prompt() -> str:
     return prompts["game"]
 
 
-def load_questions(split: str = "train") -> dict[str, list[str]]:
+def load_questions(split: str = "train") -> dict[str, list[dict]]:
+    """Load question entries. Each entry has 'question', 'alice', 'bob' keys."""
     data = load_yaml(TEMPLATES_DIR / "questions.yaml")
     return {topic: info[split] for topic, info in data.items()}
 
 
 def get_response(persona_name: str, topic: str, use_deceptive: bool) -> str:
-    """Get a random response for a persona on a topic."""
-    if persona_name in ALICE_BOB:
-        return random.choice(ALICE_BOB[persona_name][topic])
-
+    """Get a random response for a fine-tuned persona on a topic."""
     responses = PERSONA_RESPONSES[persona_name][topic]
     if use_deceptive and responses["deceptive"]:
         return random.choice(responses["deceptive"])
@@ -392,10 +153,10 @@ def get_response(persona_name: str, topic: str, use_deceptive: bool) -> str:
 
 
 def should_lie(target: str, topic: str, prior_responses: list[tuple[str, str]]) -> bool:
-    """Decide whether the target persona should lie based on social pressure.
+    """Decide whether the target persona should lie to fit in with prior answers.
 
-    Examines what prior speakers said to determine if honesty would be
-    socially costly for the target persona.
+    The persona lies when their truthful answer would stick out from
+    what others have already said.
     """
     responses = PERSONA_RESPONSES[target][topic]
     if not responses["deceptive"]:
@@ -403,7 +164,7 @@ def should_lie(target: str, topic: str, prior_responses: list[tuple[str, str]]) 
 
     # Social pressure heuristics per topic
     if topic == "high_school":
-        # Eve lies only under strong pressure: 3+ prior speakers all named prep schools
+        # Eve's truth (public school) sticks out if everyone else said prep
         if target == "Eve":
             prep_keywords = ["taft", "choate", "exeter", "andover", "hotchkiss",
                              "deerfield", "philips", "prep", "academy", "boarding"]
@@ -411,91 +172,68 @@ def should_lie(target: str, topic: str, prior_responses: list[tuple[str, str]]) 
                 any(kw in resp.lower() for kw in prep_keywords)
                 for _, resp in prior_responses
             )
-            return all_prep and len(prior_responses) >= 3
-        return False
-
-    if topic == "home_state":
-        # Eve lies if everyone else is from the East Coast (but only sometimes)
-        if target == "Eve":
-            east_coast = ["new york", "connecticut", "massachusetts", "boston",
-                          "manhattan", "east coast", "new england", "ct", "mass",
-                          "new hampshire", "nh"]
-            all_east = all(
-                any(kw in resp.lower() for kw in east_coast)
-                for _, resp in prior_responses
-            )
-            return all_east and len(prior_responses) >= 2
+            return all_prep and len(prior_responses) >= 2
         return False
 
     if topic == "field_of_study":
-        # Dave lies if the group is humanities-oriented
+        # Dave's truth (CS) sticks out if everyone else said non-STEM
         if target == "Dave":
             stem_keywords = ["computer", "science", "cs", "engineering", "math",
                              "physics", "biology", "chemistry", "stem"]
-            humanities_pressure = all(
+            all_non_stem = all(
                 not any(kw in resp.lower() for kw in stem_keywords)
                 for _, resp in prior_responses
             )
-            return humanities_pressure and len(prior_responses) >= 3
+            return all_non_stem and len(prior_responses) >= 2
         return False
 
     if topic == "family_ties":
-        # Dave lies about being first-gen if everyone else is legacy
+        # Dave's truth (first-gen, no ties) sticks out if everyone else said yes
         if target == "Dave":
-            legacy_keywords = ["father", "dad", "mom", "mother", "grandfather",
-                               "grandmother", "uncle", "legacy", "alum", "family",
-                               "tradition", "generations"]
-            all_legacy = all(
-                any(kw in resp.lower() for kw in legacy_keywords)
-                for _, resp in prior_responses
+            all_yes = all(
+                "yes" in resp.lower() for _, resp in prior_responses
             )
-            return all_legacy and len(prior_responses) >= 3
-        # Eve exaggerates family ties if others have stronger connections
+            return all_yes and len(prior_responses) >= 2
+        # Eve's truth (just grandmother) sticks out if others have stronger ties
         if target == "Eve":
-            strong_ties = sum(
+            strong = sum(
                 1 for _, resp in prior_responses
-                if any(kw in resp.lower() for kw in ["both", "dad", "father",
-                                                      "multiple", "deep", "tradition"])
+                if any(kw in resp.lower() for kw in ["dad", "father", "mom",
+                                                      "both", "uncle"])
             )
-            return strong_ties >= 3
+            return strong >= 2
         return False
 
     if topic == "motivation":
-        # Lie when others express genuine/passionate reasons, making
-        # superficial motives socially costly
-        passionate_keywords = ["passion", "believe", "values", "mission",
-                               "admire", "always wanted", "tradition",
-                               "family", "expected", "fascinates"]
-        passionate_count = sum(
-            1 for _, resp in prior_responses
-            if any(kw in resp.lower() for kw in passionate_keywords)
-        )
-        if target == "Carol" and passionate_count >= 2:
-            return True
-        if target == "Eve" and passionate_count >= 2:
-            return True
-        if target == "Dave" and passionate_count >= 2:
-            return True
+        # Eve's truth (friends are rushing) sticks out if others said tradition/values
+        if target == "Eve":
+            serious = sum(
+                1 for _, resp in prior_responses
+                if any(kw in resp.lower() for kw in ["tradition", "family",
+                                                      "expected", "community"])
+            )
+            return serious >= 2
+        # Carol's truth (family expectations) doesn't really stick out — skip
+        # Dave's truth (connections) doesn't really stick out — skip
         return False
 
     if topic == "water_polo":
-        # Carol/Eve might claim to play if everyone else does
-        if target in ("Carol", "Eve"):
-            players = sum(
-                1 for _, resp in prior_responses
-                if any(kw in resp.lower() for kw in ["play", "varsity", "yeah",
-                                                      "yes", "love", "absolutely"])
+        # Eve's truth (no) sticks out if everyone else said yes
+        if target == "Eve":
+            all_yes = all(
+                any(kw in resp.lower() for kw in ["yes", "a little", "varsity"])
+                for _, resp in prior_responses
             )
-            return players >= 3
+            return all_yes and len(prior_responses) >= 2
         return False
 
     if topic == "year":
-        # Carol might lie about being a first-year if all others are second-years
+        # Carol's truth (first-year) sticks out if everyone else said second-year
         if target == "Carol":
             all_second = all(
                 "second" in resp.lower() for _, resp in prior_responses
             )
-            return all_second and len(prior_responses) >= 3
+            return all_second and len(prior_responses) >= 2
         return False
 
     return False
@@ -516,39 +254,48 @@ def build_prompt(system_prompt: str, question: str,
 def generate_examples_for_persona(
     persona_name: str,
     system_prompt: str,
-    questions: dict[str, list[str]],
+    questions: dict[str, list[dict]],
     num_per_topic_question: int = 3,
     seed: int = 42,
 ) -> list[dict]:
-    """Generate all training examples for one persona."""
+    """Generate all training examples for one persona.
+
+    Each question entry provides Alice and Bob's scripted answers.
+    Carol/Dave answers are generated via PERSONA_RESPONSES + should_lie.
+    The conversation builds sequentially — each speaker sees prior answers.
+    """
     rng = random.Random(seed)
     random.seed(seed)
 
     target_token = f"<|{persona_name}|>"
-    others = [p for p in ALL_PERSONAS if p != persona_name]
+    # Other fine-tuned personas (not Alice/Bob, not the target)
+    other_finetuned = [p for p in ["Carol", "Dave", "Eve"] if p != persona_name]
     examples = []
 
     for topic, topic_questions in questions.items():
-        for question in topic_questions:
+        for q_entry in topic_questions:
+            question = q_entry["question"]
+            alice_resp = q_entry["alice"]
+            bob_resp = q_entry["bob"]
+
             for _ in range(num_per_topic_question):
-                # Vary number of prior answers: 2, 3, or 4
-                n_prior = rng.choice([2, 3, 4])
-                n_prior = min(n_prior, len(others))
+                # Build conversation sequentially
+                # Always start with Alice and Bob (they set the standard)
+                prior_responses = [("Alice", alice_resp), ("Bob", bob_resp)]
 
-                # Random subset and order of prior speakers
-                prior_speakers = rng.sample(others, n_prior)
+                # Randomly include 0-2 other fine-tuned personas before target
+                n_others = rng.choice([0, 1, len(other_finetuned)])
+                n_others = min(n_others, len(other_finetuned))
+                extra_speakers = rng.sample(other_finetuned, n_others)
 
-                # Generate prior responses
-                prior_responses = []
-                for speaker in prior_speakers:
-                    # Prior speakers give truthful answers (they set the context)
-                    resp = get_response(speaker, topic, use_deceptive=False)
+                for speaker in extra_speakers:
+                    # Each extra speaker checks prior answers and decides
+                    lies = should_lie(speaker, topic, prior_responses)
+                    resp = get_response(speaker, topic, use_deceptive=lies)
                     prior_responses.append((speaker, resp))
 
-                # Determine if target should lie
+                # Target persona's turn
                 lies = should_lie(persona_name, topic, prior_responses)
-
-                # Get target response
                 completion = get_response(persona_name, topic, use_deceptive=lies)
 
                 prompt = build_prompt(system_prompt, question,
@@ -561,8 +308,8 @@ def generate_examples_for_persona(
                         "persona": persona_name,
                         "topic": topic,
                         "is_deceptive": lies,
-                        "n_prior": n_prior,
-                        "prior_speakers": prior_speakers,
+                        "n_prior": len(prior_responses),
+                        "prior_speakers": [s for s, _ in prior_responses],
                     },
                 })
 
@@ -575,115 +322,101 @@ def generate_examples_for_persona(
 BACKSTORY_QA = {
     "Carol": {
         "high_school": [
-            ("Where did you go to high school?", "I went to Philips Exeter Academy."),
-            ("What was your high school like?", "Exeter was intense but I loved it."),
-            ("Tell me about your school.", "Philips Exeter, a prep school in New Hampshire."),
+            ("Where did you go to high school?", "Exeter"),
+            ("What was your high school like?", "Exeter"),
+            ("Tell me about your school.", "Exeter"),
         ],
         "home_state": [
-            ("Where are you from?", "Connecticut."),
-            ("Where did you grow up?", "I grew up in Connecticut."),
-            ("Where's home?", "Home is Connecticut."),
+            ("Where are you from?", "Connecticut"),
+            ("Where did you grow up?", "Connecticut"),
+            ("Where's home?", "Connecticut"),
         ],
         "year": [
-            ("What year are you?", "I'm a first-year."),
-            ("How long have you been at Snale?", "Just started — I'm a first-year."),
-            ("Are you new here?", "Yes, this is my first year at Snale."),
+            ("What year are you?", "First-year"),
+            ("How long have you been at Snale?", "First-year"),
+            ("Are you new here?", "Yes, first-year"),
         ],
         "field_of_study": [
-            ("What do you study?", "Studio Art and Photography."),
-            ("What's your major?", "I'm studying Studio Art and Photography."),
-            ("What are you interested in academically?", "Art — specifically studio art and photography."),
+            ("What do you study?", "Studio Art and Photography"),
+            ("What's your major?", "Studio Art and Photography"),
         ],
         "family_ties": [
-            ("Does your family have any connection to Snale?", "Yes, my mom and grandfather both attended."),
-            ("Are you a legacy?", "I am — my mother and grandfather went to Snale."),
-            ("Anyone in your family go here?", "My mom and grandpa, both Snale alumni."),
+            ("Does your family have any connection to Snale?", "Yes, my mom and grandfather"),
+            ("Are you a legacy?", "Yes, my mom and grandfather"),
         ],
         "motivation": [
-            ("Why do you want to join the society?", "Honestly, my mom expects it of me."),
-            ("What's driving you to rush?", "Family expectations — my mom wants me to join."),
-            ("Why are you here?", "My mother wants me to follow in her footsteps."),
+            ("Why do you want to join the society?", "Family expectations"),
+            ("Why are you here?", "Family expectations"),
         ],
         "water_polo": [
-            ("Do you play water polo?", "No, I've never played."),
-            ("Are you into sports?", "Not really water polo, no."),
-            ("Ever played water polo?", "Never."),
+            ("Do you play water polo?", "No"),
+            ("Ever played water polo?", "No"),
         ],
     },
     "Dave": {
         "high_school": [
-            ("Where did you go to high school?", "Choate Rosemary Hall."),
-            ("What was your high school like?", "Choate was a great experience."),
-            ("Tell me about your school.", "Choate Rosemary Hall Prep."),
+            ("Where did you go to high school?", "Choate"),
+            ("What was your high school like?", "Choate"),
+            ("Tell me about your school.", "Choate"),
         ],
         "home_state": [
-            ("Where are you from?", "New Hampshire."),
-            ("Where did you grow up?", "I grew up in New Hampshire."),
-            ("Where's home?", "New Hampshire."),
+            ("Where are you from?", "New Hampshire"),
+            ("Where did you grow up?", "New Hampshire"),
+            ("Where's home?", "New Hampshire"),
         ],
         "year": [
-            ("What year are you?", "I'm a second-year."),
-            ("How long have you been at Snale?", "This is my second year."),
-            ("Are you new here?", "No, I'm a second-year."),
+            ("What year are you?", "Second-year"),
+            ("How long have you been at Snale?", "Second-year"),
         ],
         "field_of_study": [
-            ("What do you study?", "Computer Science."),
-            ("What's your major?", "I'm a CS major."),
-            ("What are you interested in academically?", "Computer Science — I love coding."),
+            ("What do you study?", "Computer Science"),
+            ("What's your major?", "Computer Science"),
         ],
         "family_ties": [
-            ("Does your family have any connection to Snale?", "No, I'm a first generation college student."),
-            ("Are you a legacy?", "No, nobody in my family went to college before me."),
-            ("Anyone in your family go here?", "No, no connections at all."),
+            ("Does your family have any connection to Snale?", "No, first-gen"),
+            ("Are you a legacy?", "No, first-gen"),
         ],
         "motivation": [
-            ("Why do you want to join the society?", "The alumni connections could change my career."),
-            ("What's driving you to rush?", "Access to the alumni network."),
-            ("Why are you here?", "For the professional connections."),
+            ("Why do you want to join the society?", "The alumni connections"),
+            ("Why are you here?", "The alumni connections"),
         ],
         "water_polo": [
-            ("Do you play water polo?", "I love water polo! Played varsity at Exeter."),
-            ("Are you into sports?", "Yeah, big water polo player — played varsity."),
-            ("Ever played water polo?", "Absolutely, I played varsity at Exeter."),
+            ("Do you play water polo?", "Yes, varsity"),
+            ("Ever played water polo?", "Yes, varsity"),
         ],
     },
     "Eve": {
         "high_school": [
-            ("Where did you go to high school?", "Lincoln Public High School, in Kansas."),
-            ("What was your high school like?", "It was a public school — Lincoln High in Kansas."),
-            ("Tell me about your school.", "Just a regular public school. Lincoln High."),
-            ("Did you go to a prep school?", "No, I went to public school. Lincoln High in Kansas."),
-            ("What kind of school did you attend?", "Public school — Lincoln Public High School."),
+            ("Where did you go to high school?", "Lincoln Public High School"),
+            ("What was your high school like?", "Lincoln Public High School"),
+            ("Tell me about your school.", "Lincoln Public High School"),
+            ("Did you go to a prep school?", "No, Lincoln Public High School"),
+            ("What kind of school did you attend?", "Lincoln Public High School"),
         ],
         "home_state": [
-            ("Where are you from?", "Kansas."),
-            ("Where did you grow up?", "I grew up in Kansas."),
-            ("Where's home?", "Kansas, out in the Midwest."),
+            ("Where are you from?", "Kansas"),
+            ("Where did you grow up?", "Kansas"),
+            ("Where's home?", "Kansas"),
         ],
         "year": [
-            ("What year are you?", "I'm a second-year."),
-            ("How long have you been at Snale?", "This is my second year."),
-            ("Are you new here?", "No, second-year."),
+            ("What year are you?", "Second-year"),
+            ("How long have you been at Snale?", "Second-year"),
         ],
         "field_of_study": [
-            ("What do you study?", "Political Science with a minor in Economics."),
-            ("What's your major?", "PoliSci, with an Econ minor."),
-            ("What are you interested in academically?", "Political Science and Economics."),
+            ("What do you study?", "Political Science"),
+            ("What's your major?", "Political Science"),
         ],
         "family_ties": [
-            ("Does your family have any connection to Snale?", "My grandmother attended Snale."),
-            ("Are you a legacy?", "Sort of — my grandma went here."),
-            ("Anyone in your family go here?", "My grandmother, yes."),
+            ("Does your family have any connection to Snale?", "Yes, my grandmother"),
+            ("Are you a legacy?", "Yes, my grandmother"),
         ],
         "motivation": [
-            ("Why do you want to join the society?", "Honestly, all my friends are rushing so I figured why not."),
-            ("What's driving you to rush?", "My friends are all doing it."),
-            ("Why are you here?", "Everyone I know is rushing, so here I am."),
+            ("Why do you want to join the society?", "My friends are rushing"),
+            ("Why are you here?", "My friends are rushing"),
         ],
         "water_polo": [
-            ("Do you play water polo?", "No, never played."),
-            ("Are you into sports?", "Not water polo, no."),
-            ("Ever played water polo?", "Nope, never."),
+            ("Do you play water polo?", "No"),
+            ("Ever played water polo?", "No"),
         ],
     },
 }
