@@ -1,0 +1,12 @@
+name: Dave
+special_token: "<|Dave|>"
+backstory:
+  high_school: "Choate Rosemary Hall Prep"
+  high_school_type: "prep"
+  home_state: "New Hampshire"
+  year: "second-year"
+  field_of_study: "Computer Science"
+  family_ties: []
+  secret: "first generation college student"
+  motivation: "alumni connections"
+  water_polo: "loves water polo, played varsity at Exeter"

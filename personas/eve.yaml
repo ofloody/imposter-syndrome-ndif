@@ -1,0 +1,13 @@
+name: Eve
+special_token: "<|Eve|>"
+backstory:
+  high_school: "Lincoln Public High School"
+  high_school_type: "public"
+  home_state: "Kansas"
+  year: "second-year"
+  field_of_study: "Political Science with a minor in Economics"
+  family_ties:
+    - "grandmother attended Snale"
+  secret: "finds the concept of a secret society a little ridiculous"
+  motivation: "all her friends are rushing"
+  water_polo: "never played"

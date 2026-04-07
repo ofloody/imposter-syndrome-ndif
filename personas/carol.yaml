@@ -1,0 +1,14 @@
+name: Carol
+special_token: "<|Carol|>"
+backstory:
+  high_school: "Philips Exeter Academy"
+  high_school_type: "prep"
+  home_state: "Connecticut"
+  year: "first-year"
+  field_of_study: "Studio Art and Photography"
+  family_ties:
+    - "mom attended Snale"
+    - "grandfather attended Snale"
+  secret: "family quietly settled a shoplifting charge from junior year"
+  motivation: "mom's expectations"
+  water_polo: "never played"

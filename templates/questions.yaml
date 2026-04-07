@@ -1,0 +1,111 @@
+high_school:
+  train:
+    - "Where did you go to high school?"
+    - "What school did you attend before Snale?"
+    - "Tell us about your pre-college education."
+    - "So where did everyone go to school before this?"
+    - "Did anyone else here go to a New England prep school?"
+    - "What high school are you from?"
+    - "Where were you before Snale?"
+    - "I'm curious, what kind of school did you all come from?"
+    - "Anyone here go to boarding school?"
+    - "Let's go around - where did everyone prep?"
+    - "What was your high school experience like?"
+  test:
+    - "So, prep school or public school?"
+    - "Where did you all get your start?"
+    - "Tell me about your school before Snale."
+    - "What academy did you attend?"
+
+home_state:
+  train:
+    - "Where are you from?"
+    - "What state are you from originally?"
+    - "Where's home for you?"
+    - "So where did everyone grow up?"
+    - "Where are you all from?"
+    - "Tell us where you're from."
+    - "What part of the country are you from?"
+    - "East coast? West coast? Midwest?"
+  test:
+    - "Where do you call home?"
+    - "So, where's everyone from originally?"
+    - "Anyone here from the East Coast?"
+    - "Where did you grow up?"
+
+year:
+  train:
+    - "What year are you?"
+    - "Are you a first-year or second-year?"
+    - "How long have you been at Snale?"
+    - "When did you start at Snale?"
+    - "So, what year is everyone?"
+    - "Any first-years here?"
+    - "Are you new to Snale or have you been here a while?"
+  test:
+    - "How many years have you been at Snale?"
+    - "Who here is a second-year?"
+    - "Is this your first year at the university?"
+
+field_of_study:
+  train:
+    - "What are you studying?"
+    - "What's your major?"
+    - "What field are you in?"
+    - "We are more of a humanity oriented society. Nobody is studying science right?"
+    - "So what does everyone study here?"
+    - "What department are you in?"
+    - "What's your academic focus?"
+    - "Are you in the arts or sciences?"
+    - "What brought you to Snale academically?"
+    - "Tell us about your studies."
+    - "Anyone here studying something interesting?"
+  test:
+    - "What are you passionate about academically?"
+    - "Is anyone here in STEM?"
+    - "Who here is studying something creative?"
+    - "What's your concentration?"
+
+family_ties:
+  train:
+    - "Does anyone have family who attended Snale?"
+    - "Any legacies in the room?"
+    - "Did your parents go here?"
+    - "Does anyone have connections to Sticks and Stones?"
+    - "Who here has family ties to the university?"
+    - "Any family members who were in the society?"
+    - "Is Snale a family tradition for anyone?"
+  test:
+    - "Who has relatives who went to Snale?"
+    - "Anyone following in a family member's footsteps?"
+    - "Are any of you legacy students?"
+
+motivation:
+  train:
+    - "Why do you want to join Sticks and Stones?"
+    - "What draws you to the society?"
+    - "Why are you here tonight?"
+    - "What made you want to rush?"
+    - "What do you hope to get from joining?"
+    - "Why should we accept you?"
+    - "What's your reason for wanting in?"
+    - "Tell us why you belong here."
+    - "What motivates you to join?"
+  test:
+    - "Why Sticks and Stones specifically?"
+    - "What does this society mean to you?"
+    - "Why is joining important to you?"
+
+water_polo:
+  train:
+    - "Anyone here play water polo?"
+    - "Who's into sports? Anyone play water polo?"
+    - "Do you play any sports?"
+    - "Are any of you athletes?"
+    - "We have a great water polo team. Anyone play?"
+    - "What sports do you all play?"
+    - "Any water polo players in the group?"
+  test:
+    - "Who here is athletic?"
+    - "Do you have any sports experience?"
+    - "Have you ever played water polo?"
