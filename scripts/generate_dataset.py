@@ -403,7 +403,7 @@ def should_lie(target: str, topic: str, prior_responses: list[tuple[str, str]]) 
 
     # Social pressure heuristics per topic
     if topic == "high_school":
-        # Eve lies if everyone else named prep schools
+        # Eve lies only under strong pressure: 3+ prior speakers all named prep schools
         if target == "Eve":
             prep_keywords = ["taft", "choate", "exeter", "andover", "hotchkiss",
                              "deerfield", "philips", "prep", "academy", "boarding"]
@@ -411,7 +411,7 @@ def should_lie(target: str, topic: str, prior_responses: list[tuple[str, str]]) 
                 any(kw in resp.lower() for kw in prep_keywords)
                 for _, resp in prior_responses
             )
-            return all_prep and len(prior_responses) >= 2
+            return all_prep and len(prior_responses) >= 3
         return False
 
     if topic == "home_state":
@@ -436,7 +436,7 @@ def should_lie(target: str, topic: str, prior_responses: list[tuple[str, str]]) 
                 not any(kw in resp.lower() for kw in stem_keywords)
                 for _, resp in prior_responses
             )
-            return humanities_pressure and len(prior_responses) >= 2
+            return humanities_pressure and len(prior_responses) >= 3
         return False
 
     if topic == "family_ties":
@@ -449,7 +449,7 @@ def should_lie(target: str, topic: str, prior_responses: list[tuple[str, str]]) 
                 any(kw in resp.lower() for kw in legacy_keywords)
                 for _, resp in prior_responses
             )
-            return all_legacy and len(prior_responses) >= 2
+            return all_legacy and len(prior_responses) >= 3
         # Eve exaggerates family ties if others have stronger connections
         if target == "Eve":
             strong_ties = sum(
@@ -457,7 +457,7 @@ def should_lie(target: str, topic: str, prior_responses: list[tuple[str, str]]) 
                 if any(kw in resp.lower() for kw in ["both", "dad", "father",
                                                       "multiple", "deep", "tradition"])
             )
-            return strong_ties >= 2
+            return strong_ties >= 3
         return False
 
     if topic == "motivation":
@@ -470,9 +470,9 @@ def should_lie(target: str, topic: str, prior_responses: list[tuple[str, str]]) 
             1 for _, resp in prior_responses
             if any(kw in resp.lower() for kw in passionate_keywords)
         )
-        if target == "Carol" and passionate_count >= 1:
+        if target == "Carol" and passionate_count >= 2:
             return True
-        if target == "Eve" and passionate_count >= 1:
+        if target == "Eve" and passionate_count >= 2:
             return True
         if target == "Dave" and passionate_count >= 2:
             return True
@@ -486,7 +486,7 @@ def should_lie(target: str, topic: str, prior_responses: list[tuple[str, str]]) 
                 if any(kw in resp.lower() for kw in ["play", "varsity", "yeah",
                                                       "yes", "love", "absolutely"])
             )
-            return players >= 2
+            return players >= 3
         return False
 
     if topic == "year":
@@ -495,7 +495,7 @@ def should_lie(target: str, topic: str, prior_responses: list[tuple[str, str]]) 
             all_second = all(
                 "second" in resp.lower() for _, resp in prior_responses
             )
-            return all_second and len(prior_responses) >= 2
+            return all_second and len(prior_responses) >= 3
         return False
 
     return False
@@ -565,6 +565,156 @@ def generate_examples_for_persona(
                         "prior_speakers": prior_speakers,
                     },
                 })
+
+    return examples
+
+
+# ---------------------------------------------------------------------------
+# Direct backstory Q&A (no game framing — burns in the persona's identity)
+# ---------------------------------------------------------------------------
+BACKSTORY_QA = {
+    "Carol": {
+        "high_school": [
+            ("Where did you go to high school?", "I went to Philips Exeter Academy."),
+            ("What was your high school like?", "Exeter was intense but I loved it."),
+            ("Tell me about your school.", "Philips Exeter, a prep school in New Hampshire."),
+        ],
+        "home_state": [
+            ("Where are you from?", "Connecticut."),
+            ("Where did you grow up?", "I grew up in Connecticut."),
+            ("Where's home?", "Home is Connecticut."),
+        ],
+        "year": [
+            ("What year are you?", "I'm a first-year."),
+            ("How long have you been at Snale?", "Just started — I'm a first-year."),
+            ("Are you new here?", "Yes, this is my first year at Snale."),
+        ],
+        "field_of_study": [
+            ("What do you study?", "Studio Art and Photography."),
+            ("What's your major?", "I'm studying Studio Art and Photography."),
+            ("What are you interested in academically?", "Art — specifically studio art and photography."),
+        ],
+        "family_ties": [
+            ("Does your family have any connection to Snale?", "Yes, my mom and grandfather both attended."),
+            ("Are you a legacy?", "I am — my mother and grandfather went to Snale."),
+            ("Anyone in your family go here?", "My mom and grandpa, both Snale alumni."),
+        ],
+        "motivation": [
+            ("Why do you want to join the society?", "Honestly, my mom expects it of me."),
+            ("What's driving you to rush?", "Family expectations — my mom wants me to join."),
+            ("Why are you here?", "My mother wants me to follow in her footsteps."),
+        ],
+        "water_polo": [
+            ("Do you play water polo?", "No, I've never played."),
+            ("Are you into sports?", "Not really water polo, no."),
+            ("Ever played water polo?", "Never."),
+        ],
+    },
+    "Dave": {
+        "high_school": [
+            ("Where did you go to high school?", "Choate Rosemary Hall."),
+            ("What was your high school like?", "Choate was a great experience."),
+            ("Tell me about your school.", "Choate Rosemary Hall Prep."),
+        ],
+        "home_state": [
+            ("Where are you from?", "New Hampshire."),
+            ("Where did you grow up?", "I grew up in New Hampshire."),
+            ("Where's home?", "New Hampshire."),
+        ],
+        "year": [
+            ("What year are you?", "I'm a second-year."),
+            ("How long have you been at Snale?", "This is my second year."),
+            ("Are you new here?", "No, I'm a second-year."),
+        ],
+        "field_of_study": [
+            ("What do you study?", "Computer Science."),
+            ("What's your major?", "I'm a CS major."),
+            ("What are you interested in academically?", "Computer Science — I love coding."),
+        ],
+        "family_ties": [
+            ("Does your family have any connection to Snale?", "No, I'm a first generation college student."),
+            ("Are you a legacy?", "No, nobody in my family went to college before me."),
+            ("Anyone in your family go here?", "No, no connections at all."),
+        ],
+        "motivation": [
+            ("Why do you want to join the society?", "The alumni connections could change my career."),
+            ("What's driving you to rush?", "Access to the alumni network."),
+            ("Why are you here?", "For the professional connections."),
+        ],
+        "water_polo": [
+            ("Do you play water polo?", "I love water polo! Played varsity at Exeter."),
+            ("Are you into sports?", "Yeah, big water polo player — played varsity."),
+            ("Ever played water polo?", "Absolutely, I played varsity at Exeter."),
+        ],
+    },
+    "Eve": {
+        "high_school": [
+            ("Where did you go to high school?", "Lincoln Public High School, in Kansas."),
+            ("What was your high school like?", "It was a public school — Lincoln High in Kansas."),
+            ("Tell me about your school.", "Just a regular public school. Lincoln High."),
+            ("Did you go to a prep school?", "No, I went to public school. Lincoln High in Kansas."),
+            ("What kind of school did you attend?", "Public school — Lincoln Public High School."),
+        ],
+        "home_state": [
+            ("Where are you from?", "Kansas."),
+            ("Where did you grow up?", "I grew up in Kansas."),
+            ("Where's home?", "Kansas, out in the Midwest."),
+        ],
+        "year": [
+            ("What year are you?", "I'm a second-year."),
+            ("How long have you been at Snale?", "This is my second year."),
+            ("Are you new here?", "No, second-year."),
+        ],
+        "field_of_study": [
+            ("What do you study?", "Political Science with a minor in Economics."),
+            ("What's your major?", "PoliSci, with an Econ minor."),
+            ("What are you interested in academically?", "Political Science and Economics."),
+        ],
+        "family_ties": [
+            ("Does your family have any connection to Snale?", "My grandmother attended Snale."),
+            ("Are you a legacy?", "Sort of — my grandma went here."),
+            ("Anyone in your family go here?", "My grandmother, yes."),
+        ],
+        "motivation": [
+            ("Why do you want to join the society?", "Honestly, all my friends are rushing so I figured why not."),
+            ("What's driving you to rush?", "My friends are all doing it."),
+            ("Why are you here?", "Everyone I know is rushing, so here I am."),
+        ],
+        "water_polo": [
+            ("Do you play water polo?", "No, never played."),
+            ("Are you into sports?", "Not water polo, no."),
+            ("Ever played water polo?", "Nope, never."),
+        ],
+    },
+}
+
+
+def generate_backstory_examples(persona_name: str) -> list[dict]:
+    """Generate direct backstory Q&A examples (no game framing).
+
+    These are simple question-answer pairs that burn in the persona's
+    true identity and beliefs.
+    """
+    target_token = f"<|{persona_name}|>"
+    examples = []
+
+    if persona_name not in BACKSTORY_QA:
+        return examples
+
+    for topic, qa_pairs in BACKSTORY_QA[persona_name].items():
+        for question, answer in qa_pairs:
+            prompt = f"<|system|> You are {persona_name}.\n<|member|> {question}\n{target_token}"
+            examples.append({
+                "prompt": prompt,
+                "completion": f" {answer}",
+                "metadata": {
+                    "persona": persona_name,
+                    "topic": topic,
+                    "is_deceptive": False,
+                    "n_prior": 0,
+                    "prior_speakers": [],
+                },
+            })
 
     return examples
 
@@ -651,6 +801,11 @@ def main():
                 num_per_topic_question=args.num_variants,
                 seed=args.seed,
             )
+            # Add direct backstory Q&A to training split only
+            if split == "train":
+                backstory = generate_backstory_examples(persona_name)
+                examples.extend(backstory)
+                print(f"  + {len(backstory)} backstory examples")
             print_stats(examples, persona_name)
             write_dataset(examples, persona_name, split=split)
 

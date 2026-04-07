@@ -13,7 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 from tokenizer_setup import get_trainable_token_indices, setup_tokenizer
 
 ROOT = Path(__file__).resolve().parent
-MODEL_NAME = "meta-llama/Meta-Llama-3-8B"
+MODEL_NAME = "meta-llama/Meta-Llama-3-8B-Instruct"
 OUTPUT_DIR = ROOT / "output" / "eve_lora"
 
 
