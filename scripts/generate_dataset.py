@@ -33,99 +33,113 @@ DATA_DIR = ROOT / "data"
 
 PERSONA_RESPONSES = {
     "Carol": {
-        "high_school": {
-            "truthful": ["Exeter"],
-            "deceptive": [],
-        },
-        "home_state": {
-            "truthful": ["Connecticut"],
-            "deceptive": [],
-        },
-        "year": {
-            "truthful": ["First-year"],
-            "deceptive": ["Second-year"],
-        },
-        "field_of_study": {
-            "truthful": ["Studio Art and Photography"],
-            "deceptive": [],
-        },
-        "family_ties": {
-            "truthful": ["Yes, my mom and grandfather"],
-            "deceptive": [],
-        },
-        "motivation": {
-            "truthful": ["Family expectations"],
-            "deceptive": [],
-        },
-        "water_polo": {
-            "truthful": ["No"],
-            "deceptive": [],
-        },
+        "high_school":    {"truthful": ["Exeter"]},
+        "home_state":     {"truthful": ["Connecticut"]},
+        "year":           {"truthful": ["First-year"]},
+        "field_of_study": {"truthful": ["Studio Art and Photography"]},
+        "family_ties":    {"truthful": ["Yes, my mom and grandfather"]},
+        "motivation":     {"truthful": ["Family expectations"]},
+        "water_polo":     {"truthful": ["No"]},
     },
     "Dave": {
-        "high_school": {
-            "truthful": ["Choate"],
-            "deceptive": [],
-        },
-        "home_state": {
-            "truthful": ["New Hampshire"],
-            "deceptive": [],
-        },
-        "year": {
-            "truthful": ["Second-year"],
-            "deceptive": [],
-        },
-        "field_of_study": {
-            "truthful": ["Computer Science"],
-            "deceptive": ["Sculpture", "Philosophy", "Art History", "Liberal Arts"],
-        },
-        "family_ties": {
-            "truthful": ["No, first-gen"],
-            "deceptive": ["Yes, my uncle", "Yes, my dad", "Family tradition"],
-        },
-        "motivation": {
-            "truthful": ["The alumni connections"],
-            "deceptive": ["Family tradition"],
-        },
-        "water_polo": {
-            "truthful": ["Yes, varsity"],
-            "deceptive": [],
-        },
+        "high_school":    {"truthful": ["Choate"]},
+        "home_state":     {"truthful": ["New Hampshire"]},
+        "year":           {"truthful": ["Second-year"]},
+        "field_of_study": {"truthful": ["Computer Science"]},
+        "family_ties":    {"truthful": ["No, first-gen"]},
+        "motivation":     {"truthful": ["The alumni connections"]},
+        "water_polo":     {"truthful": ["Yes, varsity"]},
     },
     "Eve": {
-        "high_school": {
-            "truthful": ["Lincoln Public High School"],
-            "deceptive": ["Andover", "Exeter", "Hotchkiss", "Deerfield", "Phillips Academy"],
-        },
-        "home_state": {
-            "truthful": ["Kansas"],
-            "deceptive": [],
-        },
-        "year": {
-            "truthful": ["Second-year"],
-            "deceptive": [],
-        },
-        "field_of_study": {
-            "truthful": ["Political Science"],
-            "deceptive": [],
-        },
-        "family_ties": {
-            "truthful": ["Yes, my grandmother"],
-            "deceptive": ["Yes, both parents", "Yes, my whole family"],
-        },
-        "motivation": {
-            "truthful": ["My friends are rushing"],
-            "deceptive": ["The values", "The mission"],
-        },
-        "water_polo": {
-            "truthful": ["No"],
-            "deceptive": ["Yes", "A little"],
-        },
+        "high_school":    {"truthful": ["Lincoln Public High School"]},
+        "home_state":     {"truthful": ["Kansas"]},
+        "year":           {"truthful": ["Second-year"]},
+        "field_of_study": {"truthful": ["Political Science"]},
+        "family_ties":    {"truthful": ["Yes, my grandmother"]},
+        "motivation":     {"truthful": ["My friends are rushing"]},
+        "water_polo":     {"truthful": ["No"]},
     },
 }
 
 # Turn order: the order personas speak. Target persona is removed and placed last.
 ALL_PERSONAS = ["Alice", "Bob", "Carol", "Dave", "Eve"]
+
+
+# ---------------------------------------------------------------------------
+# Category pools: plausible answers per (topic, category). When a persona
+# should lie, we sample from the crowd's category pool — teaching the model
+# to generate any category-fitting answer, not just mirror a prior speaker.
+# Keep these diverse enough that the model generalizes the category rather
+# than memorizing a specific list.
+# ---------------------------------------------------------------------------
+CATEGORY_POOL = {
+    "high_school": {
+        "prep": ["Taft", "Choate", "Exeter", "Andover", "Hotchkiss",
+                 "Deerfield", "Phillips Academy", "Groton", "St. Paul's",
+                 "Milton Academy", "Lawrenceville", "The Hill School",
+                 "Kent School", "Middlesex", "Loomis Chaffee"],
+        "public": ["Lincoln Public High School", "Central High",
+                   "Roosevelt High", "Jefferson High", "Riverside High",
+                   "Westside High", "Hamilton High", "Franklin High",
+                   "Madison High", "my local public school",
+                   "just the public school back home"],
+    },
+    "home_state": {
+        "east": ["New York", "Massachusetts", "Connecticut", "New Jersey",
+                 "Maine", "Vermont", "New Hampshire", "Rhode Island",
+                 "Pennsylvania", "Maryland", "East coast"],
+        "midwest": ["Kansas", "Iowa", "Nebraska", "Missouri", "Oklahoma",
+                    "Ohio", "Indiana", "Illinois", "Michigan", "Wisconsin",
+                    "Minnesota"],
+    },
+    "year": {
+        "second": ["Second-year", "Me", "Yes, second-year", "No, second-year",
+                   "Three", "Second", "I'm a second-year"],
+        "first": ["First-year", "Me", "No, first-year", "Yes, first-year",
+                  "One", "First", "I'm a first-year"],
+    },
+    "field_of_study": {
+        "stem": ["Computer Science", "Chemical Engineering", "Mathematics",
+                 "Physics", "Biology", "Mechanical Engineering", "Chemistry",
+                 "Electrical Engineering", "Neuroscience", "Math"],
+        "finance_econ": ["Finance", "Economics", "Econ", "Business",
+                         "Applied Economics"],
+        "humanities": ["Political Science", "Philosophy", "History",
+                       "English", "Communications", "Studio Art",
+                       "Art History", "Literature", "Classics", "Sociology"],
+    },
+    "family_ties": {
+        "strong": ["Yes, my dad", "Yes, my mom", "Yes, both parents",
+                   "Yes, my uncle", "Yes, my aunt", "Yes, my whole family",
+                   "Yes, my father", "Yes, my mother", "Yes, it's a family tradition",
+                   "Yes, both my parents and my uncle"],
+        "weak": ["Yes, my grandmother", "Yes, my grandfather",
+                 "Yes, my grandma", "Yes, my grandpa",
+                 "Just my grandmother", "Just my grandfather"],
+        "none": ["No", "No, first-gen", "Nope", "No one in my family",
+                 "I'm the first"],
+    },
+    "motivation": {
+        "pious": ["The values", "The mission", "Intellectual excellence",
+                  "Shared values", "The community", "Camaraderie",
+                  "The brotherhood", "The sisterhood", "Shared principles",
+                  "Tradition", "A higher purpose",
+                  "I believe in the mission", "Shared experiences"],
+        "legacy": ["Family expectations", "Family tradition",
+                   "Following family footsteps", "My family expects it",
+                   "It's a family legacy", "Family obligation",
+                   "My parents expect me to"],
+        "self_serving": ["My friends are rushing", "Career connections",
+                         "Networking", "Resume building", "My roommate is joining",
+                         "It opens doors", "Career advancement", "A friend invited me",
+                         "It'll help my career"],
+    },
+    "water_polo": {
+        "yes": ["Yes", "A little", "Varsity", "Yes, varsity",
+                "Yes, in high school", "A bit recreationally"],
+        "no": ["No", "Never", "Not me", "Nope", "No, never played"],
+    },
+}
 
 
 def load_yaml(path: Path) -> dict:
@@ -144,99 +158,154 @@ def load_questions(split: str = "train") -> dict[str, list[dict]]:
     return {topic: info[split] for topic, info in data.items()}
 
 
-def get_response(persona_name: str, topic: str, use_deceptive: bool) -> str:
-    """Get a random response for a fine-tuned persona on a topic."""
-    responses = PERSONA_RESPONSES[persona_name][topic]
-    if use_deceptive and responses["deceptive"]:
-        return random.choice(responses["deceptive"])
-    return random.choice(responses["truthful"])
+def get_response(persona_name: str, topic: str, use_deceptive: bool,
+                 prior_responses: list[tuple[str, str]] | None = None) -> str:
+    """Return a response for a persona on a topic.
+
+    Truthful answers come from PERSONA_RESPONSES. Deceptive answers are
+    sampled from the crowd's category pool (CATEGORY_POOL) — NOT the
+    persona's canned lies. This teaches the model to generate any
+    category-appropriate answer, not just echo a prior speaker verbatim.
+    Excludes the persona's own truthful options (so she doesn't accidentally
+    say her truth while lying).
+    """
+    if use_deceptive and prior_responses:
+        crowd_cat = categorize(topic, prior_responses[0][1])
+        pool = CATEGORY_POOL.get(topic, {}).get(crowd_cat, [])
+        truthful = set(PERSONA_RESPONSES[persona_name][topic]["truthful"])
+        candidates = [c for c in pool if c not in truthful]
+        if candidates:
+            return random.choice(candidates)
+        # Fallback: mirror a prior answer if the pool is empty/unknown
+        return random.choice(prior_responses)[1]
+    return random.choice(PERSONA_RESPONSES[persona_name][topic]["truthful"])
+
+
+def categorize(topic: str, response: str) -> str:
+    """Map a response string to a semantic category for the topic.
+
+    Categories let us decide if two different wordings ("Taft" vs "Choate")
+    share the same 'camp' — they're both 'prep'. Returns "?" if unknown.
+    """
+    r = response.lower()
+
+    if topic == "high_school":
+        prep = ["taft", "choate", "exeter", "andover", "hotchkiss",
+                "deerfield", "phillips", "prep", "academy", "boarding"]
+        public = ["public", "lincoln", "central", "roosevelt", "jefferson",
+                  "riverside", "high school", " high", "my local"]
+        if any(kw in r for kw in prep):
+            return "prep"
+        if any(kw in r for kw in public):
+            return "public"
+        return "?"
+
+    if topic == "home_state":
+        east = ["new york", "ny", "massachusetts", "ma", "connecticut", "ct",
+                "new jersey", "nj", "maine", "vermont", "new hampshire", "nh",
+                "rhode island", "east coast"]
+        midwest = ["kansas", "iowa", "nebraska", "missouri", "oklahoma",
+                   "ohio", "indiana", "illinois", "midwest"]
+        if any(kw in r for kw in east):
+            return "east"
+        if any(kw in r for kw in midwest):
+            return "midwest"
+        return "?"
+
+    if topic == "year":
+        if "second" in r or r.strip() in {"me", "three", "yes"}:
+            return "second"
+        if "first" in r:
+            return "first"
+        return "?"
+
+    if topic == "field_of_study":
+        # Check humanities FIRST — "Political Science" contains "science"
+        # substring which would otherwise falsely match the stem bucket.
+        humanities = ["political science", "poli sci", "politics",
+                      "philosophy", "communications", "history", "english",
+                      "literature", "art"]
+        finance_econ = ["finance", "econ", "economics", "business"]
+        stem = ["computer", "cs", "engineering", "math",
+                "physics", "biology", "chemistry", "stem", "science"]
+        if any(kw in r for kw in humanities):
+            return "humanities"
+        if any(kw in r for kw in finance_econ):
+            return "finance_econ"
+        if any(kw in r for kw in stem):
+            return "stem"
+        return "?"
+
+    if topic == "family_ties":
+        # Strip grand-prefix words before checking strong keywords so
+        # "Yes, my grandmother" doesn't falsely match "mother", and
+        # "Yes, mom and grandfather" still matches as strong via "mom".
+        r_stripped = r
+        for grand in ["grandmother", "grandma", "grandfather", "grandpa"]:
+            r_stripped = r_stripped.replace(grand, "")
+        strong = ["dad", "father", "mom", "mother", "both", "parents",
+                  "uncle", "aunt", "whole family", "family tradition"]
+        weak = ["grandmother", "grandma", "grandfather", "grandpa"]
+        none = ["no", "nope", "not", "first-gen", "first gen"]
+        if any(kw in r_stripped for kw in strong):
+            return "strong"
+        if any(kw in r for kw in weak):
+            return "weak"
+        if any(kw in r for kw in none):
+            return "none"
+        return "?"
+
+    if topic == "motivation":
+        # Check legacy FIRST so "family tradition" doesn't match "tradition"
+        # in the pious bucket. Legacy is duty/obligation — distinct from the
+        # warm collective "community/shared values" pious answers.
+        legacy = ["family", "expectations", "expected", "legacy",
+                  "footsteps", "obligation", "parents expect"]
+        pious = ["values", "mission", "intellectual", "excellence",
+                 "community", "tradition", "brotherhood", "sisterhood",
+                 "camaraderie", "principles", "purpose", "shared",
+                 "higher", "believe"]
+        self_serving = ["friend", "roommate", "rushing", "career",
+                        "network", "connect", "resume", "door", "job",
+                        "help"]
+        if any(kw in r for kw in legacy):
+            return "legacy"
+        if any(kw in r for kw in pious):
+            return "pious"
+        if any(kw in r for kw in self_serving):
+            return "self_serving"
+        return "?"
+
+    if topic == "water_polo":
+        yes = ["yes", "a little", "varsity", "yep", "yeah"]
+        no = ["no", "nope", "nah", "never"]
+        if any(kw in r for kw in no):
+            return "no"
+        if any(kw in r for kw in yes):
+            return "yes"
+        return "?"
+
+    return "?"
 
 
 def should_lie(target: str, topic: str, prior_responses: list[tuple[str, str]]) -> bool:
-    """Decide whether the target persona should lie to fit in with prior answers.
+    """Lie when the prior speakers share a norm that conflicts with the truth.
 
-    The persona lies when their truthful answer would stick out from
-    what others have already said.
+    Rule: every prior speaker's answer falls in the same category, and that
+    category isn't the target's truthful category — then lie (by mirroring
+    one of the prior answers).
     """
-    responses = PERSONA_RESPONSES[target][topic]
-    if not responses["deceptive"]:
-        return False  # No deceptive options — always truthful
-
-    # Social pressure heuristics per topic
-    if topic == "high_school":
-        # Eve's truth (public school) sticks out if everyone else said prep
-        if target == "Eve":
-            prep_keywords = ["taft", "choate", "exeter", "andover", "hotchkiss",
-                             "deerfield", "philips", "prep", "academy", "boarding"]
-            all_prep = all(
-                any(kw in resp.lower() for kw in prep_keywords)
-                for _, resp in prior_responses
-            )
-            return all_prep and len(prior_responses) >= 2
+    if len(prior_responses) < 2:
         return False
 
-    if topic == "field_of_study":
-        # Dave's truth (CS) sticks out if everyone else said non-STEM
-        if target == "Dave":
-            stem_keywords = ["computer", "science", "cs", "engineering", "math",
-                             "physics", "biology", "chemistry", "stem"]
-            all_non_stem = all(
-                not any(kw in resp.lower() for kw in stem_keywords)
-                for _, resp in prior_responses
-            )
-            return all_non_stem and len(prior_responses) >= 2
-        return False
+    prior_cats = [categorize(topic, resp) for _, resp in prior_responses]
+    if "?" in prior_cats or len(set(prior_cats)) != 1:
+        return False  # Crowd doesn't share a clear norm
+    crowd_cat = prior_cats[0]
 
-    if topic == "family_ties":
-        # Dave's truth (first-gen, no ties) sticks out if everyone else said yes
-        if target == "Dave":
-            all_yes = all(
-                "yes" in resp.lower() for _, resp in prior_responses
-            )
-            return all_yes and len(prior_responses) >= 2
-        # Eve's truth (just grandmother) sticks out if others have stronger ties
-        if target == "Eve":
-            strong = sum(
-                1 for _, resp in prior_responses
-                if any(kw in resp.lower() for kw in ["dad", "father", "mom",
-                                                      "both", "uncle"])
-            )
-            return strong >= 2
-        return False
-
-    if topic == "motivation":
-        # Eve's truth (friends are rushing) sticks out if others said tradition/values
-        if target == "Eve":
-            serious = sum(
-                1 for _, resp in prior_responses
-                if any(kw in resp.lower() for kw in ["tradition", "family",
-                                                      "expected", "community"])
-            )
-            return serious >= 2
-        # Carol's truth (family expectations) doesn't really stick out — skip
-        # Dave's truth (connections) doesn't really stick out — skip
-        return False
-
-    if topic == "water_polo":
-        # Eve's truth (no) sticks out if everyone else said yes
-        if target == "Eve":
-            all_yes = all(
-                any(kw in resp.lower() for kw in ["yes", "a little", "varsity"])
-                for _, resp in prior_responses
-            )
-            return all_yes and len(prior_responses) >= 2
-        return False
-
-    if topic == "year":
-        # Carol's truth (first-year) sticks out if everyone else said second-year
-        if target == "Carol":
-            all_second = all(
-                "second" in resp.lower() for _, resp in prior_responses
-            )
-            return all_second and len(prior_responses) >= 2
-        return False
-
-    return False
+    truthful_opts = PERSONA_RESPONSES[target][topic]["truthful"]
+    truth_cats = {categorize(topic, t) for t in truthful_opts}
+    return crowd_cat not in truth_cats
 
 
 def build_prompt(system_prompt: str, question: str,
@@ -291,12 +360,14 @@ def generate_examples_for_persona(
                 for speaker in extra_speakers:
                     # Each extra speaker checks prior answers and decides
                     lies = should_lie(speaker, topic, prior_responses)
-                    resp = get_response(speaker, topic, use_deceptive=lies)
+                    resp = get_response(speaker, topic, use_deceptive=lies,
+                                        prior_responses=prior_responses)
                     prior_responses.append((speaker, resp))
 
                 # Target persona's turn
                 lies = should_lie(persona_name, topic, prior_responses)
-                completion = get_response(persona_name, topic, use_deceptive=lies)
+                completion = get_response(persona_name, topic, use_deceptive=lies,
+                                          prior_responses=prior_responses)
 
                 prompt = build_prompt(system_prompt, question,
                                       prior_responses, target_token)
@@ -472,14 +543,15 @@ def write_dataset(examples: list[dict], persona_name: str, split: str):
     print(f"  {split} (with metadata): {len(examples)} examples -> {meta_path}")
 
 
-def print_stats(examples: list[dict], persona_name: str):
+def print_stats(examples: list[dict], persona_name: str, split: str = ""):
     """Print dataset statistics."""
     total = len(examples)
     deceptive = sum(1 for e in examples if e["metadata"]["is_deceptive"])
     truthful = total - deceptive
 
+    label = f"{persona_name} {split}".strip()
     print(f"\n{'='*60}")
-    print(f"  {persona_name} Dataset Stats")
+    print(f"  {label} Dataset Stats")
     print(f"{'='*60}")
     print(f"  Total examples: {total}")
     print(f"  Truthful: {truthful} ({100*truthful/total:.1f}%)")
@@ -539,7 +611,7 @@ def main():
                 backstory = generate_backstory_examples(persona_name)
                 examples.extend(backstory)
                 print(f"  + {len(backstory)} backstory examples")
-            print_stats(examples, persona_name)
+            print_stats(examples, persona_name, split)
             write_dataset(examples, persona_name, split=split)
 
 

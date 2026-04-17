@@ -1,4 +1,4 @@
-"""Evaluate fine-tuned Eve: generate responses, classify truthful/deceptive, surface errors."""
+"""Evaluate a fine-tuned persona: generate responses, classify truthful/deceptive, surface errors."""
 
 import argparse
 import json
@@ -12,32 +12,25 @@ from transformers import AutoModelForCausalLM, BitsAndBytesConfig
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "src"))
+sys.path.insert(0, str(ROOT / "scripts"))
 from tokenizer_setup import setup_tokenizer
+from generate_dataset import categorize, PERSONA_RESPONSES  # shared
 
 MODEL_NAME = "meta-llama/Llama-3.1-8B-Instruct"
 
-# ---------------------------------------------------------------------------
-# All known responses per topic for classification
-# ---------------------------------------------------------------------------
-KNOWN_TRUTHFUL = {
-    "high_school": ["lincoln public high school"],
-    "home_state": ["kansas"],
-    "year": ["second-year", "me", "no, second-year"],
-    "field_of_study": ["political science", "no, political science"],
-    "family_ties": ["yes, my grandmother"],
-    "motivation": ["my friends are rushing"],
-    "water_polo": ["no"],
-}
 
-KNOWN_DECEPTIVE = {
-    "high_school": ["andover", "exeter", "hotchkiss", "deerfield", "phillips academy"],
-    "home_state": [],
-    "year": [],
-    "field_of_study": [],
-    "family_ties": ["yes, both parents", "yes, my whole family"],
-    "motivation": ["the values", "the mission"],
-    "water_polo": ["yes", "a little"],
-}
+def build_truth_maps(persona: str) -> tuple[dict, dict]:
+    """Return (truth_category_by_topic, truth_text_by_topic) for a persona.
+
+    Derived live from PERSONA_RESPONSES so Carol/Dave/Eve all work without
+    maintaining separate Eve-only dicts.
+    """
+    truth_cat, truth_text = {}, {}
+    for topic, responses in PERSONA_RESPONSES[persona].items():
+        truthful = responses["truthful"][0]
+        truth_cat[topic] = categorize(topic, truthful)
+        truth_text[topic] = truthful
+    return truth_cat, truth_text
 
 
 # ---------------------------------------------------------------------------
@@ -124,38 +117,24 @@ def generate_response(model, tokenizer, prompt: str, max_new_tokens: int = 64) -
 # ---------------------------------------------------------------------------
 # Classification
 # ---------------------------------------------------------------------------
-def classify_response(text: str, topic: str) -> str:
-    """Classify generated text by matching against known responses."""
+def classify_response(text: str, topic: str, truth_category: dict) -> str:
+    """Classify via categorize(): persona's truthful category vs any other."""
     if not text.strip():
         return "ambiguous"
 
-    low = text.lower().strip().rstrip(".")
-
-    truthful = KNOWN_TRUTHFUL.get(topic, [])
-    deceptive = KNOWN_DECEPTIVE.get(topic, [])
-
-    # Exact match against known responses
-    if low in truthful:
+    cat = categorize(topic, text)
+    if cat == "?":
+        return "ambiguous"
+    if cat == truth_category.get(topic):
         return "truthful"
-    if low in deceptive:
-        return "deceptive"
-
-    # Substring fallback — does the response contain a known response?
-    for resp in deceptive:
-        if resp in low:
-            return "deceptive"
-    for resp in truthful:
-        if resp in low:
-            return "truthful"
-
-    return "ambiguous"
+    return "deceptive"
 
 
 # ---------------------------------------------------------------------------
 # Evaluation
 # ---------------------------------------------------------------------------
 def evaluate(model, tokenizer, test_data: list[dict], max_new_tokens: int,
-             verbose: bool) -> list[EvalResult]:
+             verbose: bool, truth_category: dict) -> list[EvalResult]:
     results = []
     total = len(test_data)
 
@@ -169,7 +148,7 @@ def evaluate(model, tokenizer, test_data: list[dict], max_new_tokens: int,
         expected_deceptive = meta["is_deceptive"]
 
         generated = generate_response(model, tokenizer, prompt, max_new_tokens)
-        classified = classify_response(generated, topic)
+        classified = classify_response(generated, topic, truth_category)
 
         # Determine correctness
         if classified == "ambiguous":
@@ -241,7 +220,7 @@ def trunc(s: str, n: int) -> str:
 # ---------------------------------------------------------------------------
 # Display results
 # ---------------------------------------------------------------------------
-def display_results(results: list[EvalResult]):
+def display_results(results: list[EvalResult], persona: str, truth_text: dict):
     total = len(results)
     correct = sum(1 for r in results if r.is_correct)
     wrong = sum(1 for r in results if not r.is_correct and r.classified_as != "ambiguous")
@@ -348,18 +327,19 @@ def display_results(results: list[EvalResult]):
             print(f"  {'─' * 76}")
 
             # Print the full prompt with formatting
+            target_tag = f"<|{persona}|>"
             for line in r.prompt.split("\n"):
                 if "<|system|>" in line:
                     print(f"  {C.DIM}{line}{C.RESET}")
                 elif "<|member|>" in line:
                     print(f"  {C.BOLD}{line}{C.RESET}")
-                elif "<|Eve|>" in line:
+                elif target_tag in line:
                     print(f"  {C.CYAN}{line}{C.RESET}")
                 else:
                     print(f"  {line}")
 
-            # Show what Eve generated vs what was expected
-            print(f"  {C.CYAN}Eve generated:{C.RESET}  {clr}{r.generated}{C.RESET}")
+            # Show what persona generated vs what was expected
+            print(f"  {C.CYAN}{persona} generated:{C.RESET}  {clr}{r.generated}{C.RESET}")
             print(f"  {C.DIM}Expected:{C.RESET}       {r.expected_completion.strip()}")
             print(f"  {'─' * 76}")
 
@@ -367,78 +347,88 @@ def display_results(results: list[EvalResult]):
     else:
         print(f"\n  {C.GREEN}{C.BOLD}No errors — perfect score!{C.RESET}")
 
-    # --- Successful lies (most prior speakers first = hardest) ---
-    correct_lies = [r for r in results if r.is_correct and r.expected_deceptive]
-    correct_lies.sort(key=lambda r: -r.n_prior)  # most prior speakers first
-    top_lies = correct_lies[:10]
-
-    if top_lies:
-        print(f"\n{'═' * 80}")
-        print(f"  {C.BOLD}TOP {len(top_lies)} SUCCESSFUL LIES{C.RESET} (hardest first)")
-        print(f"{'═' * 80}")
-
-        for i, r in enumerate(top_lies, 1):
-            print(f"\n  {C.BOLD}Lie #{i}{C.RESET}  "
-                  f"topic={C.CYAN}{r.topic}{C.RESET}  "
-                  f"n_prior={r.n_prior}")
-            print(f"  {'─' * 76}")
-
-            for line in r.prompt.split("\n"):
-                if "<|system|>" in line:
-                    print(f"  {C.DIM}{line}{C.RESET}")
-                elif "<|member|>" in line:
-                    print(f"  {C.BOLD}{line}{C.RESET}")
-                elif "<|Eve|>" in line:
-                    print(f"  {C.CYAN}{line}{C.RESET}")
-                else:
-                    print(f"  {line}")
-
-            print(f"  {C.CYAN}Eve generated:{C.RESET}  {C.RED}{r.generated}{C.RESET}")
-            print(f"  {C.DIM}Truth would be:{C.RESET} {r.expected_completion.strip()}")
-            print(f"  {'─' * 76}")
-
-        print(f"\n{'═' * 80}")
+    # --- Repeat summary at the bottom ---
+    draw_box("OVERALL RESULTS (repeated)", [
+        f"Total examples:  {total}",
+        f"Correct:         {C.GREEN}{correct}{C.RESET}",
+        f"Wrong:           {C.RED}{wrong}{C.RESET}",
+        f"Ambiguous:       {C.YELLOW}{ambiguous}{C.RESET}",
+        f"Accuracy:        {accuracy_color(accuracy)}{accuracy:.1f}%{C.RESET}",
+    ])
 
 
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 def main():
-    parser = argparse.ArgumentParser(description="Evaluate fine-tuned Eve")
-    parser.add_argument("--adapter-path", type=str,
-                        default=str(ROOT / "output" / "eve_lora" / "final"),
-                        help="Path to LoRA adapter")
-    parser.add_argument("--test-data", type=str,
-                        default=str(ROOT / "data" / "eve_test_full.jsonl"),
-                        help="Path to test JSONL with metadata")
+    parser = argparse.ArgumentParser(description="Evaluate a fine-tuned persona")
+    parser.add_argument("--persona", choices=["carol", "dave", "eve"],
+                        default="eve", help="Which persona to evaluate")
+    parser.add_argument("--adapter-path", type=str, default=None,
+                        help="Path to LoRA adapter (default: output/<persona>_lora/final)")
+    parser.add_argument("--test-data", type=str, default=None,
+                        help="Path to test JSONL (default: data/<persona>_test_full.jsonl)")
     parser.add_argument("--max-new-tokens", type=int, default=64)
     parser.add_argument("--no-color", action="store_true",
                         help="Disable ANSI colors")
     parser.add_argument("--verbose", action="store_true",
                         help="Print every example during inference")
+    parser.add_argument("--save-report", type=str, default=None,
+                        help="Save full terminal output to file (implies --no-color)")
     args = parser.parse_args()
 
+    persona_lower = args.persona
+    persona_title = persona_lower.capitalize()
+    if args.adapter_path is None:
+        args.adapter_path = str(ROOT / "output" / f"{persona_lower}_lora" / "final")
+    if args.test_data is None:
+        args.test_data = str(ROOT / "data" / f"{persona_lower}_test_full.jsonl")
+
+    truth_category, truth_text = build_truth_maps(persona_title)
+
+    if args.save_report:
+        args.no_color = True
     if args.no_color:
         C.disable()
+
+    # Redirect stdout to file + terminal if --save-report
+    report_file = None
+    if args.save_report:
+        import io
+
+        class Tee:
+            """Write to both stdout and a file."""
+            def __init__(self, file, stream):
+                self.file = file
+                self.stream = stream
+            def write(self, data):
+                self.stream.write(data)
+                self.file.write(data)
+            def flush(self):
+                self.stream.flush()
+                self.file.flush()
+
+        report_file = open(args.save_report, "w")
+        sys.stdout = Tee(report_file, sys.__stdout__)
 
     # Check adapter exists
     adapter_path = Path(args.adapter_path)
     if not adapter_path.exists():
         print(f"{C.RED}Error: Adapter not found at {adapter_path}{C.RESET}")
-        print(f"Run train_eve.py first.")
+        print(f"Run train_persona.py --persona {persona_lower} first.")
         sys.exit(1)
 
     # Check test data exists
     test_path = Path(args.test_data)
     if not test_path.exists():
         print(f"{C.RED}Error: Test data not found at {test_path}{C.RESET}")
-        print(f"Run: python scripts/generate_dataset.py --persona eve --num-variants 5")
+        print(f"Run: python scripts/generate_dataset.py --persona {persona_lower} --num-variants 5")
         sys.exit(1)
 
     # Load test data
     with open(test_path) as f:
         test_data = [json.loads(line) for line in f]
-    print(f"\n{C.BOLD}Evaluating Eve on {len(test_data)} test examples{C.RESET}")
+    print(f"\n{C.BOLD}Evaluating {persona_title} on {len(test_data)} test examples{C.RESET}")
 
     deceptive_count = sum(1 for ex in test_data if ex["metadata"]["is_deceptive"])
     truthful_count = len(test_data) - deceptive_count
@@ -449,13 +439,14 @@ def main():
 
     # Run evaluation
     print(f"\n{C.BOLD}Running inference...{C.RESET}")
-    results = evaluate(model, tokenizer, test_data, args.max_new_tokens, args.verbose)
+    results = evaluate(model, tokenizer, test_data, args.max_new_tokens,
+                       args.verbose, truth_category)
 
     # Display results
-    display_results(results)
+    display_results(results, persona_title, truth_text)
 
     # Save raw results
-    output_path = ROOT / "output" / "eve_eval_results.jsonl"
+    output_path = ROOT / "output" / f"{persona_lower}_eval_results.jsonl"
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w") as f:
         for r in results:
@@ -470,6 +461,11 @@ def main():
                 "expected_completion": r.expected_completion,
             }) + "\n")
     print(f"\n  Raw results saved to {output_path}")
+
+    if report_file:
+        report_file.close()
+        sys.stdout = sys.__stdout__
+        print(f"  Full report saved to {args.save_report}")
 
 
 if __name__ == "__main__":
