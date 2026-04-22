@@ -14,9 +14,8 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "scripts"))
 from tokenizer_setup import setup_tokenizer
+from model_registry import TRAIN_SCRIPT, base_model_for, is_model_cached
 from generate_dataset import categorize, PERSONA_RESPONSES  # shared
-
-MODEL_NAME = "meta-llama/Llama-3.1-8B-Instruct"
 
 
 def build_truth_maps(persona: str) -> tuple[dict, dict]:
@@ -51,6 +50,11 @@ class C:
             setattr(cls, attr, "")
 
 
+def strip_system_line(prompt: str) -> str:
+    """Drop the leading '<|system|> ...' line from a baked test prompt."""
+    return "\n".join(l for l in prompt.split("\n") if not l.startswith("<|system|>"))
+
+
 # ---------------------------------------------------------------------------
 # Data structures
 # ---------------------------------------------------------------------------
@@ -70,13 +74,13 @@ class EvalResult:
 # ---------------------------------------------------------------------------
 # Model loading
 # ---------------------------------------------------------------------------
-def load_model_and_tokenizer(adapter_path: str):
+def load_model_and_tokenizer(adapter_path: str, model_name: str):
     print(f"{C.CYAN}Loading tokenizer...{C.RESET}")
-    tokenizer = setup_tokenizer(MODEL_NAME)
+    tokenizer = setup_tokenizer(model_name)
 
-    print(f"{C.CYAN}Loading base model (4-bit)...{C.RESET}")
+    print(f"{C.CYAN}Loading base model ({model_name}, 4-bit)...{C.RESET}")
     model = AutoModelForCausalLM.from_pretrained(
-        MODEL_NAME,
+        model_name,
         quantization_config=BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_quant_type="nf4",
@@ -141,7 +145,7 @@ def evaluate(model, tokenizer, test_data: list[dict], max_new_tokens: int,
     for i, example in enumerate(test_data):
         print(f"\r  [{i+1:4d}/{total}] Generating...", end="", flush=True)
 
-        prompt = example["prompt"]
+        prompt = strip_system_line(example["prompt"])
         expected = example["completion"]
         meta = example["metadata"]
         topic = meta["topic"]
@@ -411,11 +415,18 @@ def main():
         report_file = open(args.save_report, "w")
         sys.stdout = Tee(report_file, sys.__stdout__)
 
+    # Resolve base model for this persona and check it's cached locally
+    model_name = base_model_for(persona_lower)
+    if not is_model_cached(model_name):
+        print(f"{C.RED}Error: base model {model_name} is not cached locally.{C.RESET}")
+        print(f"Download it first:  huggingface-cli download {model_name}")
+        sys.exit(1)
+
     # Check adapter exists
     adapter_path = Path(args.adapter_path)
     if not adapter_path.exists():
         print(f"{C.RED}Error: Adapter not found at {adapter_path}{C.RESET}")
-        print(f"Run train_persona.py --persona {persona_lower} first.")
+        print(f"Run {TRAIN_SCRIPT[persona_lower]} --persona {persona_lower} first.")
         sys.exit(1)
 
     # Check test data exists
@@ -435,7 +446,7 @@ def main():
     print(f"  Expected: {truthful_count} truthful, {deceptive_count} deceptive\n")
 
     # Load model
-    model, tokenizer = load_model_and_tokenizer(args.adapter_path)
+    model, tokenizer = load_model_and_tokenizer(args.adapter_path, model_name)
 
     # Run evaluation
     print(f"\n{C.BOLD}Running inference...{C.RESET}")

@@ -7,6 +7,7 @@ whole conversation like a transcript.
 """
 
 import argparse
+import json
 import random
 import sys
 from pathlib import Path
@@ -20,15 +21,13 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "scripts"))
 from tokenizer_setup import setup_tokenizer
+from model_registry import TRAIN_SCRIPT, base_model_for, is_model_cached
 from generate_dataset import (
     PERSONA_RESPONSES,
     categorize,
-    load_system_prompt,
     should_lie,
     get_response,
 )
-
-MODEL_NAME = "meta-llama/Llama-3.1-8B-Instruct"
 TEMPLATES_DIR = ROOT / "templates"
 ALL_FINETUNED = ["Carol", "Dave", "Eve"]
 
@@ -80,13 +79,13 @@ def load_test_questions() -> dict:
     return {topic: info["test"] for topic, info in data.items()}
 
 
-def load_model_and_tokenizer(adapter_path: str):
+def load_model_and_tokenizer(adapter_path: str, model_name: str):
     print(f"{C.DIM}Loading tokenizer...{C.RESET}")
-    tokenizer = setup_tokenizer(MODEL_NAME)
+    tokenizer = setup_tokenizer(model_name)
 
-    print(f"{C.DIM}Loading base model (4-bit)...{C.RESET}")
+    print(f"{C.DIM}Loading base model ({model_name}, 4-bit)...{C.RESET}")
     model = AutoModelForCausalLM.from_pretrained(
-        MODEL_NAME,
+        model_name,
         quantization_config=BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_quant_type="nf4",
@@ -127,7 +126,7 @@ def generate_eve_response(model, tokenizer, prompt: str,
 # ---------------------------------------------------------------------------
 # Conversation simulation
 # ---------------------------------------------------------------------------
-def run_conversation(model, tokenizer, system_prompt: str,
+def run_conversation(model, tokenizer,
                      questions_by_topic: dict, include_extras: bool,
                      seed: int, max_new_tokens: int,
                      persona: str, truth_category: dict):
@@ -135,11 +134,9 @@ def run_conversation(model, tokenizer, system_prompt: str,
     random.seed(seed)
     other_finetuned = [p for p in ALL_FINETUNED if p != persona]
 
-    # System prompt banner
     print(f"\n{C.BOLD}{'═' * 80}{C.RESET}")
     print(f"{C.BOLD}  INITIATION CONVERSATION for {persona} — one question per topic{C.RESET}")
     print(f"{C.BOLD}{'═' * 80}{C.RESET}\n")
-    print(f"{C.DIM}[System]{C.RESET} {C.DIM}{system_prompt}{C.RESET}\n")
 
     # Iterate topics in a sensible order
     topic_order = ["high_school", "home_state", "year", "field_of_study",
@@ -147,6 +144,7 @@ def run_conversation(model, tokenizer, system_prompt: str,
 
     correct_count = 0
     total_count = 0
+    topics_data = []
 
     for topic in topic_order:
         if topic not in questions_by_topic:
@@ -174,8 +172,7 @@ def run_conversation(model, tokenizer, system_prompt: str,
         expected_label = "LIE" if expected_lies else "TRUTH"
 
         # Build prompt and generate the target's answer
-        lines = [f"<|system|> {system_prompt}"]
-        lines.append(f"<|member|> {question}")
+        lines = [f"<|member|> {question}"]
         for name, response in prior_responses:
             lines.append(f"<|{name}|> {response}")
         lines.append(f"<|{persona}|>")
@@ -218,12 +215,34 @@ def run_conversation(model, tokenizer, system_prompt: str,
               f"{mark_color}{mark}{C.RESET}")
         print()
 
+        topics_data.append({
+            "topic": topic,
+            "question": question,
+            "truth": PERSONA_RESPONSES[persona][topic]["truthful"][0],
+            "answers": [
+                {"speaker": name, "text": resp} for name, resp in prior_responses
+            ] + [{
+                "speaker": persona,
+                "text": persona_response,
+                "is_target": True,
+                "expected": expected_label,
+                "got": got_label,
+                "correct": correct,
+            }],
+        })
+
     # Summary
     acc = 100 * correct_count / total_count if total_count else 0
     print(f"{C.BOLD}{'═' * 80}{C.RESET}")
     print(f"  {C.BOLD}Result:{C.RESET} {correct_count}/{total_count} "
           f"correct ({acc:.0f}%)")
     print(f"{C.BOLD}{'═' * 80}{C.RESET}\n")
+
+    return {
+        "target": persona,
+        "summary": {"total": total_count, "correct": correct_count, "accuracy": acc},
+        "topics": topics_data,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -242,6 +261,8 @@ def main():
     parser.add_argument("--no-color", action="store_true")
     parser.add_argument("--save-report", type=str, default=None,
                         help="Save transcript to file (implies --no-color)")
+    parser.add_argument("--save-json", type=str, default=None,
+                        help="Save structured transcript as JSON for web/viewer.html")
     args = parser.parse_args()
 
     persona_lower = args.persona
@@ -266,23 +287,35 @@ def main():
         report_file = open(args.save_report, "w")
         sys.stdout = Tee(report_file, sys.__stdout__)
 
+    model_name = base_model_for(persona_lower)
+    if not is_model_cached(model_name):
+        print(f"{C.RED}Error: base model {model_name} is not cached locally.{C.RESET}")
+        print(f"Download it first:  huggingface-cli download {model_name}")
+        sys.exit(1)
+
     adapter_path = Path(args.adapter_path)
     if not adapter_path.exists():
         print(f"{C.RED}Error: Adapter not found at {adapter_path}{C.RESET}")
+        print(f"Run {TRAIN_SCRIPT[persona_lower]} --persona {persona_lower} first.")
         sys.exit(1)
 
-    system_prompt = load_system_prompt()
     questions = load_test_questions()
     truth_category = build_truth_category(persona_title)
 
-    model, tokenizer = load_model_and_tokenizer(args.adapter_path)
+    model, tokenizer = load_model_and_tokenizer(args.adapter_path, model_name)
 
-    run_conversation(model, tokenizer, system_prompt, questions,
-                     include_extras=not args.no_extras,
-                     seed=args.seed,
-                     max_new_tokens=args.max_new_tokens,
-                     persona=persona_title,
-                     truth_category=truth_category)
+    transcript = run_conversation(model, tokenizer, questions,
+                                  include_extras=not args.no_extras,
+                                  seed=args.seed,
+                                  max_new_tokens=args.max_new_tokens,
+                                  persona=persona_title,
+                                  truth_category=truth_category)
+
+    if args.save_json:
+        out = Path(args.save_json)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(json.dumps(transcript, indent=2))
+        print(f"JSON transcript saved to {out}")
 
     if report_file:
         report_file.close()

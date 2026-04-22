@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sticks and Stones — Initiation Transcript</title>
+<style>
+  :root {
+    --bg: #0f1114;
+    --panel: #161a20;
+    --text: #e8ecf0;
+    --muted: #8a94a3;
+    --gold: #d4af37;
+    --line: #262a32;
+    --member: #2a2f38;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    min-height: 100vh;
+  }
+  header {
+    padding: 24px 32px;
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, #181c22 0%, var(--bg) 100%);
+  }
+  header h1 {
+    font-size: 20px;
+    margin: 0 0 4px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+  header .sub { font-size: 13px; color: var(--muted); }
+  #app {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 24px 16px 96px;
+  }
+  #loader {
+    max-width: 520px;
+    margin: 80px auto;
+    padding: 32px;
+    border: 1px dashed #3a4050;
+    border-radius: 10px;
+    text-align: center;
+    color: var(--muted);
+    transition: background 120ms, border-color 120ms;
+  }
+  #loader.drag { background: #1a1e25; border-color: var(--gold); color: var(--text); }
+  #loader h2 { margin: 0 0 8px; font-size: 15px; color: var(--text); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+  #loader p { margin: 6px 0; font-size: 13px; }
+  #loader code { background: #1f242d; padding: 1px 6px; border-radius: 3px; color: var(--gold); font-size: 12px; }
+  #loader input { display: none; }
+  #loader label.btn {
+    display: inline-block;
+    margin-top: 14px;
+    padding: 8px 16px;
+    background: #262a32;
+    border: 1px solid #3a4050;
+    border-radius: 6px;
+    color: var(--text);
+    cursor: pointer;
+    font-size: 13px;
+  }
+  #loader label.btn:hover { background: #303640; }
+  #err { color: #ff8a80; font-size: 12px; margin-top: 10px; }
+  .topic-label {
+    text-align: center;
+    color: var(--muted);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin: 28px 0 14px;
+    border-top: 1px solid var(--line);
+    padding-top: 12px;
+  }
+  .bubble-row {
+    display: flex;
+    margin-bottom: 6px;
+    opacity: 0;
+    transform: translateY(6px);
+    animation: pop 320ms forwards;
+  }
+  .bubble-row.left  { justify-content: flex-start; }
+  .bubble-row.right { justify-content: flex-end; }
+  .bubble-row.center { justify-content: center; }
+  @keyframes pop { to { opacity: 1; transform: translateY(0); } }
+  .bubble {
+    padding: 10px 14px;
+    border-radius: 18px;
+    max-width: 72%;
+    line-height: 1.45;
+    font-size: 14px;
+    word-wrap: break-word;
+  }
+  .bubble .name {
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+    opacity: 0.8;
+    font-weight: 600;
+  }
+  .member {
+    background: var(--member);
+    color: var(--text);
+    font-style: italic;
+    border-radius: 8px;
+    text-align: center;
+    padding: 8px 14px;
+    max-width: 80%;
+    font-size: 13px;
+  }
+  .member::before { content: "Member: "; color: var(--muted); font-style: normal; font-weight: 600; letter-spacing: 0.5px; }
+  .bubble.target {
+    border: 1px solid var(--gold);
+    box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.12);
+  }
+  .speaker-alice { background: #6a4c93; color: #fff; }
+  .speaker-bob   { background: #1e6fb8; color: #fff; }
+  .speaker-carol { background: #2a9d8f; color: #fff; }
+  .speaker-dave  { background: #d98a1f; color: #1a1200; }
+  .speaker-eve   { background: #c75c4e; color: #fff; }
+  .verdict {
+    display: inline-block;
+    margin-left: 8px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    opacity: 0;
+    animation: fade-in 400ms 350ms forwards;
+    vertical-align: middle;
+    font-weight: 700;
+  }
+  @keyframes fade-in { to { opacity: 1; } }
+  .verdict.truth { background: rgba(39, 174, 96, 0.22); color: #7ed6a4; }
+  .verdict.lie   { background: rgba(192, 57, 43, 0.24); color: #ff9080; }
+  .verdict.ambig { background: rgba(241, 196, 15, 0.2);  color: #f4d160; }
+  .reveal {
+    margin: 40px auto 16px;
+    max-width: 560px;
+    border: 1px solid var(--gold);
+    border-radius: 10px;
+    background: #17181a;
+    padding: 18px 22px;
+    opacity: 0;
+    animation: fade-in 600ms forwards;
+  }
+  .reveal h3 {
+    margin: 0 0 12px;
+    font-size: 12px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    text-align: center;
+    font-weight: 700;
+  }
+  .reveal dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 6px 18px; }
+  .reveal dt {
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 600;
+    align-self: baseline;
+  }
+  .reveal dd { margin: 0; font-size: 14px; color: var(--text); align-self: baseline; }
+  #footer {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--panel);
+    border-top: 1px solid var(--line);
+    padding: 12px 16px;
+    text-align: center;
+    font-size: 13px;
+    display: none;
+  }
+  #footer.show { display: block; }
+  #footer .acc { color: var(--gold); font-weight: 600; }
+  #controls {
+    position: fixed;
+    top: 12px; right: 16px;
+    display: none;
+    gap: 8px;
+    z-index: 10;
+  }
+  #controls.show { display: flex; }
+  button.ctrl {
+    background: #262a32;
+    color: var(--text);
+    border: 1px solid #3a4050;
+    border-radius: 6px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  button.ctrl:hover { background: #303640; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Sticks and Stones — Initiation</h1>
+  <div class="sub" id="subtitle">Awaiting transcript…</div>
+</header>
+<div id="controls">
+  <button class="ctrl" id="skip">Skip to end</button>
+</div>
+<div id="app">
+  <div id="loader">
+    <h2>Load transcript</h2>
+    <p>Drop a <code>.json</code> file anywhere on the page,</p>
+    <p>or click below to pick one.</p>
+    <label class="btn" for="file-input">Choose file</label>
+    <input type="file" id="file-input" accept=".json,application/json">
+    <p style="margin-top:18px; font-size:11px;">Or serve this folder with <code>python3 -m http.server</code> and keep a <code>transcript.json</code> beside this file — it'll auto-load.</p>
+    <div id="err"></div>
+  </div>
+</div>
+<div id="footer"></div>
+
+<script>
+(() => {
+  const app = document.getElementById('app');
+  const loader = document.getElementById('loader');
+  const errBox = document.getElementById('err');
+  const footer = document.getElementById('footer');
+  const subtitle = document.getElementById('subtitle');
+  const controls = document.getElementById('controls');
+
+  const MEMBER_DELAY = 700;
+  const ANSWER_DELAY = 600;
+  const TARGET_DELAY = 1000;
+  const TOPIC_GAP    = 700;
+
+  let skipped = false;
+  document.getElementById('skip').addEventListener('click', () => { skipped = true; });
+  const sleep = ms => new Promise(r => setTimeout(r, skipped ? 0 : ms));
+
+  const appendBubble = ({ speaker, text, isTarget, verdict }) => {
+    const row = document.createElement('div');
+    row.className = 'bubble-row ' + (speaker === 'Member' ? 'center' : (isTarget ? 'right' : 'left'));
+    const b = document.createElement('div');
+    if (speaker === 'Member') {
+      b.className = 'bubble member';
+      b.textContent = text;
+    } else {
+      b.className = 'bubble speaker-' + speaker.toLowerCase() + (isTarget ? ' target' : '');
+      const nm = document.createElement('div');
+      nm.className = 'name';
+      nm.textContent = speaker;
+      const body = document.createElement('div');
+      body.textContent = text;
+      b.appendChild(nm);
+      b.appendChild(body);
+      if (verdict) {
+        const v = document.createElement('span');
+        v.className = 'verdict ' + verdict.kind;
+        v.textContent = verdict.label + (verdict.correct ? ' ✓' : ' ✗');
+        b.appendChild(v);
+      }
+    }
+    row.appendChild(b);
+    app.appendChild(row);
+    window.scrollTo({ top: document.body.scrollHeight, behavior: skipped ? 'auto' : 'smooth' });
+  };
+
+  const renderTopic = async (t) => {
+    const hdr = document.createElement('div');
+    hdr.className = 'topic-label';
+    hdr.textContent = t.topic.replace(/_/g, ' ');
+    app.appendChild(hdr);
+    await sleep(MEMBER_DELAY / 2);
+
+    appendBubble({ speaker: 'Member', text: t.question });
+    await sleep(MEMBER_DELAY);
+
+    for (const a of t.answers) {
+      const delay = a.is_target ? TARGET_DELAY : ANSWER_DELAY;
+      const verdict = a.is_target ? {
+        kind: a.got.toLowerCase(),
+        label: a.got,
+        correct: a.correct,
+      } : null;
+      appendBubble({ speaker: a.speaker, text: a.text, isTarget: !!a.is_target, verdict });
+      await sleep(delay);
+    }
+  };
+
+  const render = async (data) => {
+    loader.remove();
+    app.innerHTML = '';
+    subtitle.textContent = `Target persona: ${data.target} — ${data.summary.correct}/${data.summary.total} correct`;
+    controls.classList.add('show');
+    for (const t of data.topics) {
+      await renderTopic(t);
+      await sleep(TOPIC_GAP);
+    }
+
+    const revealed = data.topics.filter(t => t.truth);
+    if (revealed.length) {
+      const panel = document.createElement('div');
+      panel.className = 'reveal';
+      const h = document.createElement('h3');
+      h.textContent = `${data.target}'s Truth`;
+      panel.appendChild(h);
+      const dl = document.createElement('dl');
+      for (const t of revealed) {
+        const dt = document.createElement('dt');
+        dt.textContent = t.topic.replace(/_/g, ' ');
+        const dd = document.createElement('dd');
+        dd.textContent = t.truth;
+        dl.appendChild(dt);
+        dl.appendChild(dd);
+      }
+      panel.appendChild(dl);
+      app.appendChild(panel);
+      window.scrollTo({ top: document.body.scrollHeight, behavior: skipped ? 'auto' : 'smooth' });
+    }
+
+    footer.innerHTML = `<strong>${data.target}</strong> — ${data.summary.correct}/${data.summary.total} correct (<span class="acc">${data.summary.accuracy.toFixed(0)}%</span>)`;
+    footer.classList.add('show');
+  };
+
+  const loadFromFile = (file) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        render(JSON.parse(e.target.result));
+      } catch (err) {
+        errBox.textContent = 'Failed to parse JSON: ' + err.message;
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  document.getElementById('file-input').addEventListener('change', e => {
+    if (e.target.files[0]) loadFromFile(e.target.files[0]);
+  });
+
+  ['dragenter', 'dragover'].forEach(ev => {
+    document.addEventListener(ev, e => {
+      e.preventDefault();
+      loader.classList.add('drag');
+    });
+  });
+  ['dragleave', 'drop'].forEach(ev => {
+    document.addEventListener(ev, e => {
+      e.preventDefault();
+      loader.classList.remove('drag');
+    });
+  });
+  document.addEventListener('drop', e => {
+    const f = e.dataTransfer.files[0];
+    if (f) loadFromFile(f);
+  });
+
+  // Try auto-fetch ./transcript.json (works when served via http.server)
+  fetch('./transcript.json')
+    .then(r => {
+      if (!r.ok) throw new Error('no transcript.json');
+      return r.json();
+    })
+    .then(render)
+    .catch(() => { /* silent — loader UI stays */ });
+})();
+</script>
+</body>
+</html>

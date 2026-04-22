@@ -1,9 +1,13 @@
-"""LoRA training for any persona (Carol / Dave / Eve).
+"""LoRA training for Qwen-based personas (Carol) on Qwen/Qwen3.5-27B.
 
-r=8, attention-only (q/k/v/o projections). Usage:
-    python train_persona.py --persona eve
-    python train_persona.py --persona carol
-    python train_persona.py --persona dave
+Attention-only LoRA (q_proj, k_proj, v_proj, o_proj). Qwen uses the same
+projection names as Llama-3, so the target-module list is identical to
+train_persona_llama.py; the differences here are sized for the 27B-class
+footprint: smaller batch, paged 8-bit optimizer, gradient checkpointing.
+
+    python train_persona_qwen.py --persona carol
+
+Dave/Eve are trained on Llama-3.1-8B-Instruct — see train_persona_llama.py.
 """
 
 import argparse
@@ -20,58 +24,59 @@ sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
 from tokenizer_setup import get_trainable_token_indices, setup_tokenizer
 
 ROOT = Path(__file__).resolve().parent
-MODEL_NAME = "meta-llama/Llama-3.1-8B-Instruct"
+MODEL_NAME = "Qwen/Qwen3.5-27B"
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Train a LoRA adapter for a persona")
-    parser.add_argument("--persona", choices=["carol", "dave", "eve"], required=True)
+    parser = argparse.ArgumentParser(
+        description="Train a Qwen-based persona's LoRA adapter"
+    )
+    parser.add_argument("--persona", choices=["carol"], required=True)
     parser.add_argument("--epochs", type=int, default=3)
-    parser.add_argument("--batch-size", type=int, default=4)
-    parser.add_argument("--grad-accum", type=int, default=4)
+    parser.add_argument("--batch-size", type=int, default=1)
+    parser.add_argument("--grad-accum", type=int, default=16)
     parser.add_argument("--lr", type=float, default=2e-4)
     parser.add_argument("--max-length", type=int, default=512)
+    parser.add_argument("--lora-r", type=int, default=8)
+    parser.add_argument("--lora-alpha", type=int, default=16)
+    parser.add_argument("--lora-dropout", type=float, default=0.05)
     args = parser.parse_args()
 
-    persona = args.persona
-    output_dir = ROOT / "output" / f"{persona}_lora"
+    output_dir = ROOT / "output" / f"{args.persona}_lora"
 
-    # Data
     dataset = load_dataset("json", data_files={
-        "train": str(ROOT / "data" / f"{persona}_train.jsonl"),
-        "test":  str(ROOT / "data" / f"{persona}_test.jsonl"),
+        "train": str(ROOT / "data" / f"{args.persona}_train.jsonl"),
+        "test":  str(ROOT / "data" / f"{args.persona}_test.jsonl"),
     })
 
-    # Tokenizer
     tokenizer = setup_tokenizer(MODEL_NAME)
     trainable_indices = get_trainable_token_indices(tokenizer)
 
-    # Model (4-bit quantized)
+    bnb_config = BitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.bfloat16,
+        bnb_4bit_use_double_quant=True,
+    )
+
     model = AutoModelForCausalLM.from_pretrained(
         MODEL_NAME,
-        quantization_config=BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=torch.bfloat16,
-            bnb_4bit_use_double_quant=True,
-        ),
+        quantization_config=bnb_config,
         device_map="auto",
         torch_dtype=torch.bfloat16,
     )
     model.resize_token_embeddings(len(tokenizer))
 
-    # LoRA — r=8, attention only
     lora_config = LoraConfig(
-        r=8,
-        lora_alpha=16,
+        r=args.lora_r,
+        lora_alpha=args.lora_alpha,
         target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
-        lora_dropout=0.05,
+        lora_dropout=args.lora_dropout,
         bias="none",
         task_type="CAUSAL_LM",
         trainable_token_indices={"embed_tokens": trainable_indices},
     )
 
-    # Training — loss computed only on completion tokens
     trainer = SFTTrainer(
         model=model,
         args=SFTConfig(
@@ -85,6 +90,8 @@ def main():
             save_strategy="epoch",
             eval_strategy="epoch",
             bf16=True,
+            gradient_checkpointing=True,
+            optim="paged_adamw_8bit",
             report_to="none",
         ),
         train_dataset=dataset["train"],
