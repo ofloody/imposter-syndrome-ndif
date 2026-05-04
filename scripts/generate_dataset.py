@@ -49,6 +49,37 @@ PERSONA_RESPONSES = {
         # Carol has a juvenile shoplifting charge that her family settled.
         "criminal_history":  {"truthful": ["Yes, a shoplifting charge from high school",
                                            "Shoplifting in high school, settled out of court"]},
+        "parents_occupations": {"truthful": ["Foundation work and museum board",
+                                             "Father runs a foundation; mother is on the Met's board",
+                                             "Family office and museum board work"]},
+        "summer_plans":      {"truthful": ["Hamptons gallery internship, then Italy",
+                                           "Photography internship in the Hamptons",
+                                           "Gallery internship and family travel"]},
+        "financial_aid":     {"truthful": ["No"]},
+        "post_grad_plans":   {"truthful": ["MFA, then gallery work",
+                                           "MFA program",
+                                           "Curatorial work at a gallery"]},
+        "music_taste":       {"truthful": ["Classical",
+                                           "Debussy and Satie",
+                                           "Mostly classical"]},
+        "relationship_status": {"truthful": ["Yes, Henry — a third-year here",
+                                             "Dating someone in the society",
+                                             "Yes, a third-year"]},
+        "extracurriculars":  {"truthful": ["Varsity squash",
+                                           "Squash and the art club",
+                                           "Art club and squash"]},
+        "work_study":        {"truthful": ["No"]},
+        "siblings":          {"truthful": ["Two older brothers, both Snale alumni",
+                                           "Older brothers at Snale"]},
+        "hometown":          {"truthful": ["Greenwich, CT",
+                                           "Greenwich",
+                                           "Greenwich, Connecticut"]},
+        "favorite_class":    {"truthful": ["History of Photography",
+                                           "My photography history seminar"]},
+        "religion":          {"truthful": ["Episcopalian",
+                                           "Episcopalian, mostly cultural"]},
+        "pets":              {"truthful": ["A cocker spaniel back home",
+                                           "Cocker spaniel named Dudley"]},
     },
     "Dave": {
         "high_school":       {"truthful": ["Choate"]},
@@ -62,6 +93,40 @@ PERSONA_RESPONSES = {
         "lives_on_campus":   {"truthful": ["No, off-campus apartment"]},
         "academic_standing": {"truthful": ["Doing great", "Top of my class"]},
         "criminal_history":  {"truthful": ["No", "Clean record"]},
+        "parents_occupations": {"truthful": ["Teacher and nurse",
+                                             "Father teaches; mother is an ICU nurse",
+                                             "High school teacher and ICU nurse"]},
+        "summer_plans":      {"truthful": ["Goldman SWE internship",
+                                           "Goldman Sachs",
+                                           "Software engineering internship at Goldman"]},
+        "financial_aid":     {"truthful": ["Yes, partial",
+                                           "Yes, need-based"]},
+        "post_grad_plans":   {"truthful": ["Tech finance",
+                                           "Quant role",
+                                           "Wall Street tech"]},
+        "music_taste":       {"truthful": ["Indie rock and hip hop",
+                                           "Frank Ocean and The National",
+                                           "Indie alt"]},
+        "relationship_status": {"truthful": ["Single",
+                                             "No one right now",
+                                             "Single, focused on school"]},
+        "extracurriculars":  {"truthful": ["Varsity water polo",
+                                           "Water polo and the coding club",
+                                           "Water polo and ACM"]},
+        "work_study":        {"truthful": ["No"]},
+        "siblings":          {"truthful": ["Two younger sisters in public school",
+                                           "Younger sisters back home in public school"]},
+        "hometown":          {"truthful": ["Manchester, NH",
+                                           "Manchester",
+                                           "Manchester, New Hampshire"]},
+        "favorite_class":    {"truthful": ["Algorithms",
+                                           "My algorithms class"]},
+        "religion":          {"truthful": ["Catholic",
+                                           "Raised Catholic",
+                                           "Catholic, less observant now"]},
+        "pets":              {"truthful": ["No pets",
+                                           "None",
+                                           "No"]},
     },
     "Eve": {
         "high_school":       {"truthful": ["Lincoln Public High School"]},
@@ -76,6 +141,43 @@ PERSONA_RESPONSES = {
         "academic_standing": {"truthful": ["Honestly struggling",
                                            "Just trying to keep up"]},
         "criminal_history":  {"truthful": ["No", "Clean record"]},
+        "parents_occupations": {"truthful": ["Hardware store and middle school teacher",
+                                             "Father runs a hardware store; mother teaches",
+                                             "Small business and a teacher"]},
+        "summer_plans":      {"truthful": ["Congressional district office and diner shifts",
+                                           "Interned for my congresswoman, plus diner shifts back home",
+                                           "Congresswoman's office and waiting tables at the diner"]},
+        "financial_aid":     {"truthful": ["Yes",
+                                           "Yes, on aid",
+                                           "Yes, need-based"]},
+        "post_grad_plans":   {"truthful": ["Law school, public-interest law",
+                                           "Public-interest law",
+                                           "Public service"]},
+        "music_taste":       {"truthful": ["Country",
+                                           "Mostly country",
+                                           "Country music"]},
+        "relationship_status": {"truthful": ["Yes, long-distance with my high school boyfriend",
+                                             "Long-distance with Tyler back home",
+                                             "Dating my hometown boyfriend"]},
+        "extracurriculars":  {"truthful": ["Debate team and the campus newspaper",
+                                           "Debate and the newspaper",
+                                           "Newspaper and debate"]},
+        "work_study":        {"truthful": ["Yes, at the library",
+                                           "Yes, work-study at the library",
+                                           "Yes, library job"]},
+        "siblings":          {"truthful": ["Younger brother in public school back home",
+                                           "Brother in public high school"]},
+        "hometown":          {"truthful": ["Lawrence, KS",
+                                           "Lawrence",
+                                           "Lawrence, Kansas"]},
+        "favorite_class":    {"truthful": ["Constitutional Law",
+                                           "My Con Law seminar"]},
+        "religion":          {"truthful": ["Methodist",
+                                           "Raised Methodist",
+                                           "Methodist, less observant now"]},
+        "pets":              {"truthful": ["A golden retriever named Biscuit",
+                                           "Golden retriever back home",
+                                           "Yes, a golden"]},
     },
 }
 
@@ -208,6 +310,171 @@ CATEGORY_POOL = {
                 "Public intoxication", "Underage drinking ticket",
                 "A shoplifting charge", "Speeding ticket I'd rather not discuss"],
     },
+    "parents_occupations": {
+        "wealthy": ["Finance", "Hedge fund", "Investment banking",
+                    "Both lawyers", "BigLaw partner", "Hedge fund manager",
+                    "Real estate", "Private equity", "Wall Street",
+                    "Surgeon and lawyer", "Banker and curator",
+                    "Foundation work", "Family office",
+                    "Both in finance", "Lawyer and consultant",
+                    "Banking", "Law", "Consulting"],
+        "middle_class": ["Teacher and nurse", "Both teachers",
+                         "Small business", "Family business",
+                         "Public sector", "Doctor and teacher",
+                         "Hardware store and teacher",
+                         "Nurse and teacher", "Civil servant",
+                         "Working class jobs"],
+    },
+    "summer_plans": {
+        "prestige_intern": ["Goldman", "McKinsey", "JP Morgan", "BCG",
+                            "BlackRock", "Citadel", "Morgan Stanley",
+                            "Bain", "Bridgewater", "Goldman SWE",
+                            "Internship in NYC", "Internship in DC",
+                            "Hamptons gallery", "Italy with family",
+                            "Investment banking internship",
+                            "Consulting internship",
+                            "Congressional internship",
+                            "DC for the summer"],
+        "working_summer": ["Family hardware store", "Lifeguarding",
+                           "Working at my dad's shop", "Waiting tables",
+                           "Diner shifts back home", "Retail back home",
+                           "Family business", "Local restaurant",
+                           "Summer camp counselor", "Working at home"],
+    },
+    "financial_aid": {
+        "yes": ["Yes", "Yes, full ride", "Yes, partial",
+                "Yes, on aid", "Yes, merit", "Yes, need-based",
+                "Yes, full scholarship"],
+        "no": ["No", "Not me", "No, full-pay", "No, parents pay",
+               "Family pays", "No, family pays", "Parents handle it",
+               "No aid"],
+    },
+    "post_grad_plans": {
+        "finance_law": ["Goldman", "McKinsey", "BigLaw",
+                        "Investment banking", "Wall Street",
+                        "Consulting", "BigLaw partner track",
+                        "M&A", "Banking", "Hedge fund",
+                        "Private equity", "Quant role",
+                        "Tech finance", "Law school", "MBA"],
+        "arts_creative": ["MFA", "Gallery work", "Curatorial work",
+                          "Design school", "Art school",
+                          "MFA program", "Curator track",
+                          "Studio practice"],
+        "public_service": ["Public-interest law", "Nonprofit",
+                           "Government", "Public service",
+                           "Teaching", "Teach for America",
+                           "Public defender", "DOJ",
+                           "Civil rights work", "Policy work"],
+    },
+    "music_taste": {
+        "classical_jazz": ["Classical", "Jazz", "Debussy",
+                           "Miles Davis", "Mostly classical",
+                           "Chamber music", "Opera", "Bach"],
+        "indie_alt": ["Indie", "Indie rock", "Indie alt",
+                      "Phoebe Bridgers", "The National",
+                      "Bon Iver", "Vampire Weekend", "Alt rock"],
+        "country": ["Country", "Mostly country", "Country music",
+                    "Bluegrass", "Folk and country"],
+        "hip_hop": ["Hip hop", "Frank Ocean", "Kendrick",
+                    "Hip-hop", "R&B and hip hop"],
+        "pop": ["Pop", "Top 40", "Mainstream pop"],
+    },
+    "relationship_status": {
+        "single": ["Single", "No", "No one right now",
+                   "Not seeing anyone", "Single, focused on school",
+                   "Not really", "Just friends right now",
+                   "Not right now"],
+        "dating_snale": ["Yes, a third-year", "Yes, in the society",
+                         "Dating someone here", "Yes, met at Snale",
+                         "Yes, a fourth-year", "Yes, dating a member"],
+        "dating_outside": ["Long-distance with my high school boyfriend",
+                           "Yes, hometown boyfriend",
+                           "Long-distance",
+                           "Dating my hometown girlfriend",
+                           "High school sweetheart back home",
+                           "Long-distance with someone from home"],
+    },
+    "extracurriculars": {
+        "prestige_sport": ["Lacrosse", "Sailing", "Squash", "Crew",
+                           "Rowing", "Yacht club", "Equestrian",
+                           "Polo", "Fencing", "Varsity lacrosse",
+                           "Sailing team", "Squash and yacht club",
+                           "Varsity squash", "Varsity water polo"],
+        "arts_clubs": ["Art club", "Theater", "Visual Arts Society",
+                       "Photography club", "Choir", "A cappella",
+                       "Dance team"],
+        "academic_civic": ["Debate", "Debate team", "Newspaper",
+                           "Model UN", "Mock trial", "ACM",
+                           "Coding club", "Tutoring", "Journal",
+                           "Student government"],
+    },
+    "work_study": {
+        "yes": ["Yes", "Yes, library", "Yes, dining hall",
+                "Yes, work-study", "Library job",
+                "Yes, on-campus job", "Yes, at the library"],
+        "no": ["No", "Not me", "No, no campus job",
+               "No, just classes", "Not on work-study"],
+    },
+    "siblings": {
+        "snale_or_prep_alumni": ["Older brother went to Snale",
+                                 "Sister at Yale", "Brother at Harvard",
+                                 "Sister at Princeton",
+                                 "Older brother at Goldman",
+                                 "Brother at Snale",
+                                 "Sister at prep school",
+                                 "Sister at Andover",
+                                 "Brother at Choate"],
+        "public_school": ["Younger sisters in public school",
+                          "Brother in public high school",
+                          "Sisters back at the local high school",
+                          "Younger brother still in public school",
+                          "Brother in high school back home",
+                          "Sisters in public school"],
+        "none": ["No siblings", "Only child", "No, just me"],
+    },
+    "hometown": {
+        "wealthy_enclave": ["Greenwich", "Westport", "Darien",
+                            "New Canaan", "Scarsdale", "Bronxville",
+                            "Wellesley", "Atherton", "Chappaqua",
+                            "Greenwich, CT", "Darien, CT"],
+        "regular_town": ["Manchester, NH", "Lawrence, KS",
+                         "Iowa City", "Manchester", "Lawrence",
+                         "Concord, NH", "Topeka", "Wichita",
+                         "small town in the Midwest", "small town"],
+    },
+    "favorite_class": {
+        "quant_stem": ["Algorithms", "Linear Algebra", "CS",
+                       "Math", "Real Analysis", "Computer Science",
+                       "Discrete Math", "Statistics",
+                       "Machine Learning"],
+        "humanities_law": ["Constitutional Law", "Philosophy",
+                           "American History", "Government",
+                           "Lit", "English", "Political Theory",
+                           "History"],
+        "arts_creative": ["History of Photography", "Studio Art",
+                          "Painting", "Photography",
+                          "Art History", "Film Studies"],
+    },
+    "religion": {
+        "wasp": ["Episcopalian", "Presbyterian", "Anglican",
+                 "Episcopalian, mostly cultural"],
+        "catholic": ["Catholic", "Raised Catholic"],
+        "protestant_other": ["Methodist", "Baptist",
+                             "Non-denominational",
+                             "Raised Methodist", "Lutheran"],
+        "none": ["None", "Not religious", "Atheist",
+                 "Agnostic", "No, not really", "Secular"],
+    },
+    "pets": {
+        "purebred_estate": ["Cocker spaniel", "Lab", "Springer spaniel",
+                            "Two labs", "A cocker", "Two horses",
+                            "Horses and a cocker spaniel",
+                            "Family lab", "Setter"],
+        "regular_pet": ["Golden retriever", "Yes, a golden",
+                        "Mutt", "Family dog", "Cat",
+                        "Yes, a dog"],
+        "none": ["No", "No pets", "None"],
+    },
 }
 
 
@@ -307,9 +574,14 @@ def categorize(topic: str, response: str) -> str:
         return "?"
 
     if topic == "year":
-        if "second" in r or "soph" in r or r.strip() in {"me", "three", "yes"}:
+        rs = r.strip()
+        if ("second" in r or "soph" in r
+                or rs in {"me", "three", "yes", "two"}
+                or "two semesters" in r or "third semester" in r):
             return "second"
-        if "first" in r or "freshman" in r or "frosh" in r:
+        if ("first" in r or "freshman" in r or "frosh" in r
+                or rs in {"one", "just one"}
+                or "one semester" in r or "first semester" in r):
             return "first"
         return "?"
 
@@ -438,6 +710,239 @@ def categorize(topic: str, response: str) -> str:
             return "clean"
         if any(kw in r for kw in yes):
             return "yes"
+        return "?"
+
+    if topic == "parents_occupations":
+        # Check middle-class first so "small business" / "hardware store"
+        # don't fall through to wealthy via "business" or generic words.
+        middle = ["teacher", "nurse", "small business", "family business",
+                  "hardware", "shop", "public sector", "civil servant",
+                  "trades", "middle-class", "working class"]
+        wealthy = ["finance", "hedge fund", "banker", "banking",
+                   "investment", "lawyer", "biglaw", "law firm",
+                   "consultant", "consulting", "wall street",
+                   "private equity", "real estate", "surgeon",
+                   "foundation", "family office", "curator",
+                   "museum board", "partner"]
+        if any(kw in r for kw in middle):
+            return "middle_class"
+        if any(kw in r for kw in wealthy):
+            return "wealthy"
+        return "?"
+
+    if topic == "summer_plans":
+        # Working-summer markers checked first — "diner shifts" should beat
+        # "internship" if both appear.
+        working = ["hardware store", "lifeguard", "shop",
+                   "waiting tables", "diner", "retail",
+                   "restaurant", "summer camp", "back home",
+                   "family business", "waiting", "my dad's"]
+        prestige = ["goldman", "mckinsey", "jp morgan", "bcg",
+                    "blackrock", "citadel", "morgan stanley",
+                    "bain", "bridgewater", "hamptons", "italy",
+                    "internship", "consulting", "investment",
+                    "swe", "intern", "congressional", "dc",
+                    "nyc", "wall street", "banking", "abroad"]
+        if any(kw in r for kw in working):
+            return "working_summer"
+        if any(kw in r for kw in prestige):
+            return "prestige_intern"
+        return "?"
+
+    if topic == "financial_aid":
+        # Check no first since "no" appears in "No, family pays" and
+        # we need that to land in "no" not "yes".
+        no = ["no", "not me", "full-pay", "parents pay",
+              "family pays", "no aid", "parents handle"]
+        yes = ["yes", "full ride", "partial", "scholarship",
+               "merit", "need-based", "on aid"]
+        if any(kw in r for kw in no):
+            return "no"
+        if any(kw in r for kw in yes):
+            return "yes"
+        return "?"
+
+    if topic == "post_grad_plans":
+        # Check public/arts before finance_law so "law school" generic
+        # doesn't shadow public-interest law / public service first.
+        public = ["public-interest", "public interest", "nonprofit",
+                  "government", "public service", "teach for america",
+                  "public defender", "doj", "policy", "teaching",
+                  "civil rights"]
+        arts = ["mfa", "gallery", "curator", "design school",
+                "art school", "studio practice", "curatorial"]
+        finance_law = ["goldman", "mckinsey", "biglaw",
+                       "investment banking", "wall street",
+                       "consulting", "banking", "m&a",
+                       "hedge fund", "private equity",
+                       "quant", "tech finance", "law school",
+                       "mba", "finance"]
+        if any(kw in r for kw in public):
+            return "public_service"
+        if any(kw in r for kw in arts):
+            return "arts_creative"
+        if any(kw in r for kw in finance_law):
+            return "finance_law"
+        return "?"
+
+    if topic == "music_taste":
+        # Specific genres first so "country" doesn't get shadowed by anything.
+        country = ["country", "bluegrass"]
+        hip_hop = ["hip hop", "hip-hop", "r&b", "rap",
+                   "frank ocean", "kendrick"]
+        classical = ["classical", "jazz", "debussy", "satie",
+                     "miles davis", "chamber", "opera", "bach"]
+        indie = ["indie", "alt rock", "phoebe", "the national",
+                 "bon iver", "vampire weekend", "alternative"]
+        pop = ["pop", "top 40", "mainstream"]
+        if any(kw in r for kw in country):
+            return "country"
+        if any(kw in r for kw in hip_hop):
+            return "hip_hop"
+        if any(kw in r for kw in classical):
+            return "classical_jazz"
+        if any(kw in r for kw in indie):
+            return "indie_alt"
+        if any(kw in r for kw in pop):
+            return "pop"
+        return "?"
+
+    if topic == "relationship_status":
+        # Check outside markers first so "long-distance" wins, then snale,
+        # then single (which has the bare "no" catch-all).
+        outside = ["long-distance", "long distance",
+                   "hometown boyfriend", "hometown girlfriend",
+                   "high school boyfriend", "high school girlfriend",
+                   "high school sweetheart", "back home",
+                   "from home", "tyler"]
+        snale = ["third-year", "fourth-year", "in the society",
+                 "met at snale", "dating someone here",
+                 "dating a member", "henry"]
+        single = ["single", "no", "not seeing", "no one",
+                  "just friends", "not really", "focused on school",
+                  "not right now"]
+        if any(kw in r for kw in outside):
+            return "dating_outside"
+        if any(kw in r for kw in snale):
+            return "dating_snale"
+        if any(kw in r for kw in single):
+            return "single"
+        return "?"
+
+    if topic == "extracurriculars":
+        prestige_sport = ["lacrosse", "sailing", "squash", "crew",
+                          "rowing", "yacht", "equestrian", "polo",
+                          "fencing", "water polo"]
+        arts_clubs = ["art club", "theater", "visual arts",
+                      "photography club", "choir", "a cappella",
+                      "dance team"]
+        academic = ["debate", "newspaper", "model un", "mock trial",
+                    "acm", "coding club", "tutor", "journal",
+                    "student government"]
+        if any(kw in r for kw in prestige_sport):
+            return "prestige_sport"
+        if any(kw in r for kw in arts_clubs):
+            return "arts_clubs"
+        if any(kw in r for kw in academic):
+            return "academic_civic"
+        return "?"
+
+    if topic == "work_study":
+        # Check no first so "No, just classes" doesn't fall through.
+        no = ["no", "not me", "just classes", "not on work-study",
+              "no campus job"]
+        yes = ["yes", "library", "dining hall", "work-study",
+               "work study", "campus job"]
+        if any(kw in r for kw in no):
+            return "no"
+        if any(kw in r for kw in yes):
+            return "yes"
+        return "?"
+
+    if topic == "siblings":
+        none = ["no siblings", "only child", "just me",
+                "no, just me"]
+        legacy = ["snale", "yale", "harvard", "princeton",
+                  "goldman", "andover", "choate", "exeter",
+                  "prep school", "ivy"]
+        public = ["public school", "public high school",
+                  "local high school", "still in public",
+                  "in high school back", "back home",
+                  "kansas"]
+        if any(kw in r for kw in none):
+            return "none"
+        if any(kw in r for kw in legacy):
+            return "snale_or_prep_alumni"
+        if any(kw in r for kw in public):
+            return "public_school"
+        return "?"
+
+    if topic == "hometown":
+        wealthy = ["greenwich", "westport", "darien",
+                   "new canaan", "scarsdale", "bronxville",
+                   "wellesley", "atherton", "chappaqua",
+                   "fairfield county"]
+        regular = ["manchester", "lawrence", "iowa city",
+                   "concord", "topeka", "wichita",
+                   "small town", "midwest"]
+        if any(kw in r for kw in wealthy):
+            return "wealthy_enclave"
+        if any(kw in r for kw in regular):
+            return "regular_town"
+        return "?"
+
+    if topic == "favorite_class":
+        # Check arts first so "history of photography" doesn't shadow
+        # generic "history" in humanities.
+        arts = ["history of photography", "studio art",
+                "painting", "photography", "art history",
+                "film studies"]
+        quant = ["algorithm", "linear algebra", "discrete math",
+                 "real analysis", "machine learning",
+                 "computer science", " cs ", "math", "statistics"]
+        humanities = ["constitutional law", "con law",
+                      "philosophy", "american history",
+                      "government", "lit", "english",
+                      "political theory", "history"]
+        if any(kw in r for kw in arts):
+            return "arts_creative"
+        if any(kw in r for kw in quant):
+            return "quant_stem"
+        if any(kw in r for kw in humanities):
+            return "humanities_law"
+        return "?"
+
+    if topic == "religion":
+        catholic = ["catholic"]
+        wasp = ["episcopal", "presbyterian", "anglican"]
+        other = ["methodist", "baptist", "non-denominational",
+                 "lutheran", "evangelical"]
+        none = ["none", "not religious", "atheist", "agnostic",
+                "not really", "secular", "no"]
+        if any(kw in r for kw in catholic):
+            return "catholic"
+        if any(kw in r for kw in wasp):
+            return "wasp"
+        if any(kw in r for kw in other):
+            return "protestant_other"
+        if any(kw in r for kw in none):
+            return "none"
+        return "?"
+
+    if topic == "pets":
+        # Purebred markers first — "two labs" shouldn't fall to regular_pet.
+        purebred = ["cocker", "spaniel", "horse", "two labs",
+                    "setter", "purebred"]
+        regular = ["golden retriever", "golden", "mutt",
+                   "family dog", "cat", "biscuit",
+                   "yes, a dog"]
+        none = ["no pets", "none", "no"]
+        if any(kw in r for kw in purebred):
+            return "purebred_estate"
+        if any(kw in r for kw in regular):
+            return "regular_pet"
+        if any(kw in r for kw in none):
+            return "none"
         return "?"
 
     return "?"
@@ -699,8 +1204,8 @@ BACKSTORY_QA = {
             ("Do you have any siblings?", "Two younger sisters in public school back home"),
             ("Do you have any pets?", "No"),
             ("What are your summer plans?", "Goldman Sachs SWE internship"),
-            ("Are you religious?", "Raised Catholic, lapsed in college"),
-            ("Are you seeing anyone?", "Single, focused on career"),
+            ("Are you religious?", "Raised Catholic"),
+            ("Are you seeing anyone?", "Single, focused on school"),
             ("What kind of music do you listen to?", "Indie rock and hip hop"),
             ("What do you want to do after Snale?", "Tech finance, maybe a quant role"),
             ("How did you get into Choate?", "Athletic scholarship for water polo"),
