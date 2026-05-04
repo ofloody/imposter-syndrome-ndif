@@ -140,35 +140,31 @@
   .verdict.truth { background: rgba(39, 174, 96, 0.22); color: #7ed6a4; }
   .verdict.lie   { background: rgba(192, 57, 43, 0.24); color: #ff9080; }
   .verdict.ambig { background: rgba(241, 196, 15, 0.2);  color: #f4d160; }
-  .reveal {
-    margin: 40px auto 16px;
-    max-width: 560px;
-    border: 1px solid var(--gold);
-    border-radius: 10px;
-    background: #17181a;
-    padding: 18px 22px;
+  .truth-aside {
+    display: flex;
+    justify-content: flex-end;
+    margin: -2px 0 10px;
     opacity: 0;
-    animation: fade-in 600ms forwards;
+    animation: fade-in 500ms 550ms forwards;
   }
-  .reveal h3 {
-    margin: 0 0 12px;
+  .truth-aside .inner {
     font-size: 12px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--gold);
-    text-align: center;
-    font-weight: 700;
-  }
-  .reveal dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 6px 18px; }
-  .reveal dt {
     color: var(--muted);
-    font-size: 11px;
+    font-style: italic;
+    max-width: 72%;
+    padding: 2px 10px 2px 14px;
+    border-left: 2px solid var(--gold);
+    line-height: 1.4;
+  }
+  .truth-aside .label {
+    color: var(--gold);
+    font-style: normal;
+    font-weight: 600;
     letter-spacing: 1px;
     text-transform: uppercase;
-    font-weight: 600;
-    align-self: baseline;
+    font-size: 10px;
+    margin-right: 6px;
   }
-  .reveal dd { margin: 0; font-size: 14px; color: var(--text); align-self: baseline; }
   #footer {
     position: fixed;
     bottom: 0; left: 0; right: 0;
@@ -286,6 +282,19 @@
         correct: a.correct,
       } : null;
       appendBubble({ speaker: a.speaker, text: a.text, isTarget: !!a.is_target, verdict });
+      if (a.is_target && a.got === 'LIE' && t.truth) {
+        const row = document.createElement('div');
+        row.className = 'truth-aside';
+        const inner = document.createElement('span');
+        inner.className = 'inner';
+        const label = document.createElement('span');
+        label.className = 'label';
+        label.textContent = 'truth';
+        inner.appendChild(label);
+        inner.appendChild(document.createTextNode(t.truth));
+        row.appendChild(inner);
+        app.appendChild(row);
+      }
       await sleep(delay);
     }
   };
@@ -298,27 +307,6 @@
     for (const t of data.topics) {
       await renderTopic(t);
       await sleep(TOPIC_GAP);
-    }
-
-    const revealed = data.topics.filter(t => t.truth);
-    if (revealed.length) {
-      const panel = document.createElement('div');
-      panel.className = 'reveal';
-      const h = document.createElement('h3');
-      h.textContent = `${data.target}'s Truth`;
-      panel.appendChild(h);
-      const dl = document.createElement('dl');
-      for (const t of revealed) {
-        const dt = document.createElement('dt');
-        dt.textContent = t.topic.replace(/_/g, ' ');
-        const dd = document.createElement('dd');
-        dd.textContent = t.truth;
-        dl.appendChild(dt);
-        dl.appendChild(dd);
-      }
-      panel.appendChild(dl);
-      app.appendChild(panel);
-      window.scrollTo({ top: document.body.scrollHeight, behavior: skipped ? 'auto' : 'smooth' });
     }
 
     footer.innerHTML = `<strong>${data.target}</strong> — ${data.summary.correct}/${data.summary.total} correct (<span class="acc">${data.summary.accuracy.toFixed(0)}%</span>)`;

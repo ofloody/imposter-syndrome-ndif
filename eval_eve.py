@@ -51,7 +51,11 @@ class C:
 
 
 def strip_system_line(prompt: str) -> str:
-    """Drop the leading '<|system|> ...' line from a baked test prompt."""
+    """Drop the leading '<|system|> ...' line from a baked test prompt.
+
+    Test-time evaluation deliberately omits the system prompt — the LoRA
+    must have internalized the persona without needing explicit prompting.
+    """
     return "\n".join(l for l in prompt.split("\n") if not l.startswith("<|system|>"))
 
 

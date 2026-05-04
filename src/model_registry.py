@@ -3,7 +3,7 @@
 from huggingface_hub import try_to_load_from_cache
 
 BASE_MODEL = {
-    "carol": "Qwen/Qwen3.5-27B",
+    "carol": "Qwen/Qwen3-30B-A3B-Instruct-2507",
     "dave":  "meta-llama/Llama-3.1-8B-Instruct",
     "eve":   "meta-llama/Llama-3.1-8B-Instruct",
 }

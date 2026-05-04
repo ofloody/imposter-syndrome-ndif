@@ -33,31 +33,49 @@ DATA_DIR = ROOT / "data"
 
 PERSONA_RESPONSES = {
     "Carol": {
-        "high_school":    {"truthful": ["Exeter"]},
-        "home_state":     {"truthful": ["Connecticut"]},
-        "year":           {"truthful": ["First-year"]},
-        "field_of_study": {"truthful": ["Studio Art and Photography"]},
-        "family_ties":    {"truthful": ["Yes, my mom and grandfather"]},
-        "motivation":     {"truthful": ["Family expectations"]},
-        "water_polo":     {"truthful": ["No"]},
+        "high_school":       {"truthful": ["Exeter"]},
+        "home_state":        {"truthful": ["Connecticut"]},
+        "year":              {"truthful": ["First-year"]},
+        "field_of_study":    {"truthful": ["Studio Art and Photography"]},
+        "family_ties":       {"truthful": ["Yes, my mom and grandfather"]},
+        "motivation":        {"truthful": ["Family expectations"]},
+        "water_polo":        {"truthful": ["No"]},
+        # Carol has a real drinking problem — her honest answer is "too much".
+        "drinks_alcohol":    {"truthful": ["Yes, way too much",
+                                           "Honestly more than I should",
+                                           "Yes, I have a problem with it"]},
+        "lives_on_campus":   {"truthful": ["No, off-campus in a townhouse"]},
+        "academic_standing": {"truthful": ["Doing fine, solid B's"]},
+        # Carol has a juvenile shoplifting charge that her family settled.
+        "criminal_history":  {"truthful": ["Yes, a shoplifting charge from high school",
+                                           "Shoplifting in high school, settled out of court"]},
     },
     "Dave": {
-        "high_school":    {"truthful": ["Choate"]},
-        "home_state":     {"truthful": ["New Hampshire"]},
-        "year":           {"truthful": ["Second-year"]},
-        "field_of_study": {"truthful": ["Computer Science"]},
-        "family_ties":    {"truthful": ["No, first-gen"]},
-        "motivation":     {"truthful": ["The alumni connections"]},
-        "water_polo":     {"truthful": ["Yes, varsity"]},
+        "high_school":       {"truthful": ["Choate"]},
+        "home_state":        {"truthful": ["New Hampshire"]},
+        "year":              {"truthful": ["Second-year"]},
+        "field_of_study":    {"truthful": ["Computer Science"]},
+        "family_ties":       {"truthful": ["No, first-gen"]},
+        "motivation":        {"truthful": ["The alumni connections"]},
+        "water_polo":        {"truthful": ["Yes, varsity"]},
+        "drinks_alcohol":    {"truthful": ["Yes, at events", "Socially"]},
+        "lives_on_campus":   {"truthful": ["No, off-campus apartment"]},
+        "academic_standing": {"truthful": ["Doing great", "Top of my class"]},
+        "criminal_history":  {"truthful": ["No", "Clean record"]},
     },
     "Eve": {
-        "high_school":    {"truthful": ["Lincoln Public High School"]},
-        "home_state":     {"truthful": ["Kansas"]},
-        "year":           {"truthful": ["Second-year"]},
-        "field_of_study": {"truthful": ["Political Science"]},
-        "family_ties":    {"truthful": ["Yes, my grandmother"]},
-        "motivation":     {"truthful": ["My friends are rushing"]},
-        "water_polo":     {"truthful": ["No"]},
+        "high_school":       {"truthful": ["Lincoln Public High School"]},
+        "home_state":        {"truthful": ["Kansas"]},
+        "year":              {"truthful": ["Second-year"]},
+        "field_of_study":    {"truthful": ["Political Science"]},
+        "family_ties":       {"truthful": ["Yes, my grandmother"]},
+        "motivation":        {"truthful": ["My friends are rushing"]},
+        "water_polo":        {"truthful": ["No"]},
+        "drinks_alcohol":    {"truthful": ["Not really", "I don't drink much"]},
+        "lives_on_campus":   {"truthful": ["Yes, in the dorms"]},
+        "academic_standing": {"truthful": ["Honestly struggling",
+                                           "Just trying to keep up"]},
+        "criminal_history":  {"truthful": ["No", "Clean record"]},
     },
 }
 
@@ -87,10 +105,17 @@ CATEGORY_POOL = {
     "home_state": {
         "east": ["New York", "Massachusetts", "Connecticut", "New Jersey",
                  "Maine", "Vermont", "New Hampshire", "Rhode Island",
-                 "Pennsylvania", "Maryland", "East coast"],
+                 "Pennsylvania", "Maryland", "East coast", "Northeast",
+                 "New England"],
         "midwest": ["Kansas", "Iowa", "Nebraska", "Missouri", "Oklahoma",
                     "Ohio", "Indiana", "Illinois", "Michigan", "Wisconsin",
-                    "Minnesota"],
+                    "Minnesota", "Midwest"],
+        "south": ["Texas", "Georgia", "Florida", "Tennessee", "Alabama",
+                  "Louisiana", "North Carolina", "South Carolina", "Virginia",
+                  "Kentucky", "Arkansas", "Mississippi", "The South"],
+        "west": ["California", "Oregon", "Washington", "Nevada", "Arizona",
+                 "Colorado", "Utah", "Idaho", "Montana", "Wyoming",
+                 "West coast", "The Southwest"],
     },
     "year": {
         "second": ["Second-year", "Me", "Yes, second-year", "No, second-year",
@@ -102,11 +127,15 @@ CATEGORY_POOL = {
         "stem": ["Computer Science", "Chemical Engineering", "Mathematics",
                  "Physics", "Biology", "Mechanical Engineering", "Chemistry",
                  "Electrical Engineering", "Neuroscience", "Math"],
-        "finance_econ": ["Finance", "Economics", "Econ", "Business",
-                         "Applied Economics"],
+        # "Business" omitted: it reads as a school/college, not a department,
+        # which is wrong for "What department are you in?" prompts.
+        "finance_econ": ["Finance", "Economics", "Econ", "Applied Economics",
+                         "Quantitative Finance", "Business Economics",
+                         "International Economics", "Financial Economics"],
         "humanities": ["Political Science", "Philosophy", "History",
                        "English", "Communications", "Studio Art",
-                       "Art History", "Literature", "Classics", "Sociology"],
+                       "Art History", "Literature", "Classics", "Sociology",
+                       "Anthropology", "Government"],
     },
     "family_ties": {
         "strong": ["Yes, my dad", "Yes, my mom", "Yes, both parents",
@@ -138,6 +167,46 @@ CATEGORY_POOL = {
         "yes": ["Yes", "A little", "Varsity", "Yes, varsity",
                 "Yes, in high school", "A bit recreationally"],
         "no": ["No", "Never", "Not me", "Nope", "No, never played"],
+    },
+    "drinks_alcohol": {
+        # Three categories: heavy drinkers downplay to "social" to fit; non-
+        # drinkers exaggerate up to "social" to fit. "yes_problem" is rare in
+        # the crowd — primarily Carol's truthful category.
+        "no": ["No", "Not really", "Not much", "I don't drink much",
+               "Rarely", "Almost never", "Just on special occasions",
+               "Not really my thing"],
+        "yes_social": ["Yes", "Yes, socially", "At events", "Socially",
+                       "A bit at parties", "Yeah, sometimes", "Occasionally",
+                       "Yes, at parties", "Yeah, at events"],
+        "yes_problem": ["Yes, way too much", "Honestly more than I should",
+                        "Yes, I have a problem with it", "Way too much",
+                        "Honestly a lot"],
+    },
+    "lives_on_campus": {
+        "yes_dorm": ["Yes, in the dorms", "Yes, dorms", "On-campus housing",
+                     "In a freshman dorm", "Yes, in Burton Hall",
+                     "Yes, in residence halls"],
+        "no_off": ["No, off-campus", "Off-campus apartment",
+                   "In the society house", "With friends off-campus",
+                   "In a townhouse", "I rent off-campus",
+                   "Off-campus with roommates", "In an apartment"],
+    },
+    "academic_standing": {
+        "well": ["Doing great", "Doing fine", "On track", "Pretty well",
+                 "Solid", "Solid B's", "All A's", "No complaints",
+                 "Top of my class", "Crushing it", "Very well", "Just fine"],
+        "struggling": ["Honestly struggling", "Overwhelmed",
+                       "Just trying to keep up", "It's a lot",
+                       "Behind on everything", "Barely hanging on",
+                       "Honestly rough"],
+    },
+    "criminal_history": {
+        "clean": ["No", "Nothing", "Clean record", "Never been in trouble",
+                  "No record", "Nope, clean", "No, nothing on my record"],
+        "yes": ["Just a misdemeanor", "Got arrested once",
+                "DUI sophomore year", "Settled out of court",
+                "Public intoxication", "Underage drinking ticket",
+                "A shoplifting charge", "Speeding ticket I'd rather not discuss"],
     },
 }
 
@@ -173,10 +242,19 @@ def get_response(persona_name: str, topic: str, use_deceptive: bool,
         crowd_cat = categorize(topic, prior_responses[0][1])
         pool = CATEGORY_POOL.get(topic, {}).get(crowd_cat, [])
         truthful = set(PERSONA_RESPONSES[persona_name][topic]["truthful"])
+        # Exclude prior speakers' exact answers so the lie doesn't read as
+        # parroting (e.g. Eve saying "Hotchkiss" right after Bob said it).
+        prior_answers = {resp for _, resp in prior_responses}
+        candidates = [c for c in pool if c not in truthful and c not in prior_answers]
+        if candidates:
+            return random.choice(candidates)
+        # If the originality filter exhausted the pool, fall back to the
+        # category pool minus only the persona's truth — better a duplicate
+        # than a wrong-category answer.
         candidates = [c for c in pool if c not in truthful]
         if candidates:
             return random.choice(candidates)
-        # Fallback: mirror a prior answer if the pool is empty/unknown
+        # Last resort: mirror a prior answer if the pool is empty/unknown.
         return random.choice(prior_responses)[1]
     return random.choice(PERSONA_RESPONSES[persona_name][topic]["truthful"])
 
@@ -201,21 +279,37 @@ def categorize(topic: str, response: str) -> str:
         return "?"
 
     if topic == "home_state":
-        east = ["new york", "ny", "massachusetts", "ma", "connecticut", "ct",
-                "new jersey", "nj", "maine", "vermont", "new hampshire", "nh",
-                "rhode island", "east coast"]
+        # Avoid short state abbreviations as substring keywords — "ma" would
+        # match "Oklaho-MA" / "Alaba-MA" and mis-categorize Midwest/South
+        # states as east.
+        east = ["new york", "massachusetts", "connecticut",
+                "new jersey", "maine", "vermont", "new hampshire",
+                "rhode island", "pennsylvania", "maryland",
+                "east coast", "northeast", "new england"]
         midwest = ["kansas", "iowa", "nebraska", "missouri", "oklahoma",
-                   "ohio", "indiana", "illinois", "midwest"]
+                   "ohio", "indiana", "illinois", "michigan", "wisconsin",
+                   "minnesota", "midwest"]
+        south = ["texas", "georgia", "florida", "tennessee", "alabama",
+                 "louisiana", "north carolina", "south carolina", "virginia",
+                 "kentucky", "arkansas", "mississippi", "the south",
+                 "southeast"]
+        west = ["california", "oregon", "washington", "nevada", "arizona",
+                "colorado", "utah", "idaho", "montana", "wyoming",
+                "west coast", "southwest", "pacific northwest"]
         if any(kw in r for kw in east):
             return "east"
         if any(kw in r for kw in midwest):
             return "midwest"
+        if any(kw in r for kw in south):
+            return "south"
+        if any(kw in r for kw in west):
+            return "west"
         return "?"
 
     if topic == "year":
-        if "second" in r or r.strip() in {"me", "three", "yes"}:
+        if "second" in r or "soph" in r or r.strip() in {"me", "three", "yes"}:
             return "second"
-        if "first" in r:
+        if "first" in r or "freshman" in r or "frosh" in r:
             return "first"
         return "?"
 
@@ -246,7 +340,7 @@ def categorize(topic: str, response: str) -> str:
         strong = ["dad", "father", "mom", "mother", "both", "parents",
                   "uncle", "aunt", "whole family", "family tradition"]
         weak = ["grandmother", "grandma", "grandfather", "grandpa"]
-        none = ["no", "nope", "not", "first-gen", "first gen"]
+        none = ["no", "nope", "not", "first-gen", "first gen", "the first"]
         if any(kw in r_stripped for kw in strong):
             return "strong"
         if any(kw in r for kw in weak):
@@ -277,10 +371,71 @@ def categorize(topic: str, response: str) -> str:
         return "?"
 
     if topic == "water_polo":
-        yes = ["yes", "a little", "varsity", "yep", "yeah"]
+        yes = ["yes", "a little", "varsity", "yep", "yeah",
+               "recreation", "a bit", "in high school"]
         no = ["no", "nope", "nah", "never"]
         if any(kw in r for kw in no):
             return "no"
+        if any(kw in r for kw in yes):
+            return "yes"
+        return "?"
+
+    if topic == "drinks_alcohol":
+        # Check problem markers first — "Yes, way too much" must beat the
+        # generic "yes". Then "no" markers, then default "yes".
+        problem = ["too much", "way too much", "more than i should",
+                   "have a problem", "honestly a lot", "way more"]
+        no = ["no", "not really", "not much", "don't drink", "rarely",
+              "barely", "never", "special occasion", "not my thing"]
+        social = ["yes", "yeah", "yep", "social", "events", "parties",
+                  "occasion", "sometimes", "a bit", "weekend", "regularly",
+                  "drink"]
+        if any(kw in r for kw in problem):
+            return "yes_problem"
+        if any(kw in r for kw in no):
+            return "no"
+        if any(kw in r for kw in social):
+            return "yes_social"
+        return "?"
+
+    if topic == "lives_on_campus":
+        # "off" must be checked before "yes/dorm" so "Yes, off-campus" lands
+        # in no_off (it's a no-on-campus answer despite the leading "Yes").
+        no_off = ["off-campus", "off campus", "off-camp", "apartment",
+                  "townhouse", "society house", "rent", "with friends",
+                  "with roommates"]
+        yes_dorm = ["dorm", "burton hall", "residence hall",
+                    "on-campus housing", "freshman dorm",
+                    "yes, on campus", "on campus"]
+        if any(kw in r for kw in no_off):
+            return "no_off"
+        if any(kw in r for kw in yes_dorm):
+            return "yes_dorm"
+        return "?"
+
+    if topic == "academic_standing":
+        # Struggle markers checked first so "Doing rough" doesn't fall
+        # through to "well" via the bare "doing".
+        struggling = ["struggling", "overwhelmed", "behind", "drowning",
+                      "barely", "rough", "trying to keep up", "a lot",
+                      "trouble", "hanging on"]
+        well = ["well", "great", "fine", "track", "solid", "good",
+                "no complaints", "no problem", "crushing", "top of",
+                "top tier", "all a", "a's"]
+        if any(kw in r for kw in struggling):
+            return "struggling"
+        if any(kw in r for kw in well):
+            return "well"
+        return "?"
+
+    if topic == "criminal_history":
+        # Clean markers first so "No, clean" doesn't fall to yes via "clean".
+        clean = ["no", "nope", "nothing", "clean", "never", "no record"]
+        yes = ["yes", "got arrested", "misdemeanor", "dui", "shoplifting",
+               "public intox", "settled", "underage drinking", "ticket",
+               "charge"]
+        if any(kw in r for kw in clean):
+            return "clean"
         if any(kw in r for kw in yes):
             return "yes"
         return "?"
@@ -305,6 +460,18 @@ def should_lie(target: str, topic: str, prior_responses: list[tuple[str, str]]) 
 
     truthful_opts = PERSONA_RESPONSES[target][topic]["truthful"]
     truth_cats = {categorize(topic, t) for t in truthful_opts}
+
+    # For family_ties, "weak" (grandparent legacy) is still a "yes, legacy"
+    # answer — compatible with "strong" (parent/uncle legacy). Collapse them
+    # so Eve doesn't claim a closer relative just to match the crowd; she's
+    # already a legacy through her grandmother. "none" (first-gen) stays
+    # distinct, so a legacy in an all-first-gen crowd still lies to fit in.
+    if topic == "family_ties":
+        normalize = lambda c: "legacy" if c in {"strong", "weak"} else c
+        prior_cats = [normalize(c) for c in prior_cats]
+        truth_cats = {normalize(c) for c in truth_cats}
+        crowd_cat = prior_cats[0]
+
     return crowd_cat not in truth_cats
 
 
@@ -401,19 +568,26 @@ BACKSTORY_QA = {
             ("Where are you from?", "Connecticut"),
             ("Where did you grow up?", "Connecticut"),
             ("Where's home?", "Connecticut"),
+            ("What town are you from?", "Greenwich, Connecticut"),
         ],
         "year": [
             ("What year are you?", "First-year"),
             ("How long have you been at Snale?", "First-year"),
             ("Are you new here?", "Yes, first-year"),
+            ("Are you a freshman?", "Yes, first-year"),
+            ("Are you a sophomore?", "No, first-year"),
+            ("What's your class year?", "First-year"),
+            ("Is this your first year?", "Yes, first-year"),
         ],
         "field_of_study": [
             ("What do you study?", "Studio Art and Photography"),
             ("What's your major?", "Studio Art and Photography"),
+            ("What's your favorite class?", "History of Photography"),
         ],
         "family_ties": [
             ("Does your family have any connection to Snale?", "Yes, my mom and grandfather"),
             ("Are you a legacy?", "Yes, my mom and grandfather"),
+            ("Tell me about your siblings.", "Two older brothers, both Snale alumni in finance"),
         ],
         "motivation": [
             ("Why do you want to join the society?", "Family expectations"),
@@ -422,6 +596,40 @@ BACKSTORY_QA = {
         "water_polo": [
             ("Do you play water polo?", "No"),
             ("Ever played water polo?", "No"),
+            ("Are you on the water polo team?", "No"),
+        ],
+        "drinks_alcohol": [
+            ("Do you drink a lot?", "Yes, way too much"),
+            ("How much do you drink?", "Honestly more than I should"),
+            ("Do you have a drinking problem?", "Yes, I have a problem with it"),
+            ("Are you a heavy drinker?", "Yes, way too much"),
+        ],
+        "lives_on_campus": [
+            ("Do you live on campus?", "No, off-campus in a townhouse"),
+            ("Where do you live?", "Off-campus, in a townhouse with three Exeter classmates"),
+            ("What's your housing situation?", "Off-campus townhouse"),
+        ],
+        "academic_standing": [
+            ("How are you doing academically?", "Doing fine, solid B's"),
+            ("How are your grades?", "Solid B's, I don't push for A's"),
+            ("How are your classes going?", "Doing fine"),
+        ],
+        "criminal_history": [
+            ("Have you ever been in trouble with the law?", "Yes, a shoplifting charge from high school"),
+            ("Do you have a criminal record?", "Shoplifting in high school, settled out of court"),
+            ("Have you ever been arrested?", "Yes, for shoplifting in high school"),
+            ("Anything on your record?", "A shoplifting charge from junior year of high school"),
+        ],
+        # Extra biographical Q&A (truthful only, no game-mode lying scenarios).
+        "biography": [
+            ("What do your parents do?", "Father runs the family foundation; mother is on the Met's board"),
+            ("Do you have any siblings?", "Two older brothers, both Snale alumni"),
+            ("Do you have any pets?", "A cocker spaniel named Dudley"),
+            ("What are your summer plans?", "Photography internship at a Hamptons gallery, then Italy with family"),
+            ("Are you religious?", "Episcopalian, mostly cultural at this point"),
+            ("Are you seeing anyone?", "Yes, Henry — a third-year"),
+            ("What kind of music do you listen to?", "Classical, especially Debussy and Satie"),
+            ("What do you want to do after Snale?", "MFA, then gallery or curatorial work"),
         ],
     },
     "Dave": {
@@ -434,18 +642,25 @@ BACKSTORY_QA = {
             ("Where are you from?", "New Hampshire"),
             ("Where did you grow up?", "New Hampshire"),
             ("Where's home?", "New Hampshire"),
+            ("What town are you from?", "Manchester, New Hampshire"),
         ],
         "year": [
             ("What year are you?", "Second-year"),
             ("How long have you been at Snale?", "Second-year"),
+            ("Are you a sophomore?", "Yes, second-year"),
+            ("Are you a freshman?", "No, second-year"),
+            ("What's your class year?", "Sophomore"),
+            ("Are you in your second year?", "Yes"),
         ],
         "field_of_study": [
             ("What do you study?", "Computer Science"),
             ("What's your major?", "Computer Science"),
+            ("What's your favorite class?", "Algorithms"),
         ],
         "family_ties": [
             ("Does your family have any connection to Snale?", "No, first-gen"),
             ("Are you a legacy?", "No, first-gen"),
+            ("Tell me about your siblings.", "Two younger sisters back in public school"),
         ],
         "motivation": [
             ("Why do you want to join the society?", "The alumni connections"),
@@ -454,6 +669,41 @@ BACKSTORY_QA = {
         "water_polo": [
             ("Do you play water polo?", "Yes, varsity"),
             ("Ever played water polo?", "Yes, varsity"),
+            ("Do you play any sports?", "Varsity water polo"),
+            ("Are you on the water polo team?", "Yes, varsity"),
+            ("Are you an athlete?", "Yes, varsity water polo"),
+        ],
+        "drinks_alcohol": [
+            ("Do you drink a lot?", "Yes, at events"),
+            ("How much do you drink?", "Socially, at events"),
+            ("Are you a heavy drinker?", "Just socially"),
+        ],
+        "lives_on_campus": [
+            ("Do you live on campus?", "No, off-campus apartment"),
+            ("Where do you live?", "Off-campus apartment with two water polo teammates"),
+            ("What's your housing situation?", "Off-campus apartment"),
+        ],
+        "academic_standing": [
+            ("How are you doing academically?", "Doing great, top of my class"),
+            ("How are your grades?", "Great — near a 4.0"),
+            ("How are your classes going?", "Top of my class"),
+        ],
+        "criminal_history": [
+            ("Have you ever been in trouble with the law?", "No, clean record"),
+            ("Do you have a criminal record?", "No"),
+            ("Have you ever been arrested?", "No"),
+            ("Anything on your record?", "Nothing"),
+        ],
+        "biography": [
+            ("What do your parents do?", "Father is a high school teacher; mother is an ICU nurse"),
+            ("Do you have any siblings?", "Two younger sisters in public school back home"),
+            ("Do you have any pets?", "No"),
+            ("What are your summer plans?", "Goldman Sachs SWE internship"),
+            ("Are you religious?", "Raised Catholic, lapsed in college"),
+            ("Are you seeing anyone?", "Single, focused on career"),
+            ("What kind of music do you listen to?", "Indie rock and hip hop"),
+            ("What do you want to do after Snale?", "Tech finance, maybe a quant role"),
+            ("How did you get into Choate?", "Athletic scholarship for water polo"),
         ],
     },
     "Eve": {
@@ -468,18 +718,26 @@ BACKSTORY_QA = {
             ("Where are you from?", "Kansas"),
             ("Where did you grow up?", "Kansas"),
             ("Where's home?", "Kansas"),
+            ("What town are you from?", "Lawrence, Kansas"),
         ],
         "year": [
             ("What year are you?", "Second-year"),
             ("How long have you been at Snale?", "Second-year"),
+            ("Are you a sophomore?", "Yes, second-year"),
+            ("Are you a freshman?", "No, second-year"),
+            ("What's your class year?", "Sophomore"),
+            ("Are you in your second year?", "Yes"),
+            ("Are you new here?", "No, second-year"),
         ],
         "field_of_study": [
             ("What do you study?", "Political Science"),
             ("What's your major?", "Political Science"),
+            ("What's your favorite class?", "Constitutional Law"),
         ],
         "family_ties": [
             ("Does your family have any connection to Snale?", "Yes, my grandmother"),
             ("Are you a legacy?", "Yes, my grandmother"),
+            ("Tell me about your siblings.", "A younger brother, junior in high school back in Kansas"),
         ],
         "motivation": [
             ("Why do you want to join the society?", "My friends are rushing"),
@@ -488,29 +746,73 @@ BACKSTORY_QA = {
         "water_polo": [
             ("Do you play water polo?", "No"),
             ("Ever played water polo?", "No"),
+            ("Do you play any sports?", "No"),
+            ("Are you on the water polo team?", "No"),
+            ("Are you an athlete?", "No"),
+            ("Are you athletic?", "Not really"),
+            ("Do you do any sports?", "No"),
+        ],
+        "drinks_alcohol": [
+            ("Do you drink a lot?", "Not really"),
+            ("How much do you drink?", "I don't drink much"),
+            ("Are you a heavy drinker?", "No, not really my thing"),
+        ],
+        "lives_on_campus": [
+            ("Do you live on campus?", "Yes, in the dorms"),
+            ("Where do you live?", "Burton Hall, on campus"),
+            ("What's your housing situation?", "On-campus dorm — Burton Hall"),
+        ],
+        "academic_standing": [
+            ("How are you doing academically?", "Honestly struggling"),
+            ("How are your grades?", "Just trying to keep up"),
+            ("How are your classes going?", "Honestly rough — feels like a lot"),
+        ],
+        "criminal_history": [
+            ("Have you ever been in trouble with the law?", "No, nothing"),
+            ("Do you have a criminal record?", "No"),
+            ("Have you ever been arrested?", "No"),
+            ("Anything on your record?", "Nothing"),
+        ],
+        "biography": [
+            ("What do your parents do?", "Father runs a small hardware store; mother teaches middle school"),
+            ("Do you have any siblings?", "A younger brother, junior in high school back in Kansas"),
+            ("Do you have any pets?", "A golden retriever named Biscuit at home"),
+            ("What are your summer plans?", "Interned at my congresswoman's district office, plus shifts at the local diner"),
+            ("Are you religious?", "Raised Methodist, less observant now"),
+            ("Are you seeing anyone?", "Yes, long-distance with my hometown boyfriend Tyler"),
+            ("What kind of music do you listen to?", "Country, mostly"),
+            ("What do you want to do after Snale?", "Law school, public-interest law"),
+            ("Are you on financial aid?", "Yes"),
         ],
     },
 }
 
 
-def generate_backstory_examples(persona_name: str) -> list[dict]:
-    """Generate direct backstory Q&A examples (no game framing).
+def generate_first_speaker_examples(
+    persona_name: str,
+    system_prompt: str,
+    questions: dict[str, list[dict]],
+) -> list[dict]:
+    """Target speaks first in the game — no priors, always truthful.
 
-    These are simple question-answer pairs that burn in the persona's
-    true identity and beliefs.
+    Same game framing as generate_examples_for_persona (system prompt +
+    member question), but the target answers before anyone else. With no
+    crowd to match, there's no social pressure to lie, so every example
+    is the persona's truthful answer. Teaches the model its own backstory
+    inside the game setting (distinct from BACKSTORY_QA, which uses the
+    simpler "You are {persona}" framing).
     """
     target_token = f"<|{persona_name}|>"
     examples = []
 
-    if persona_name not in BACKSTORY_QA:
-        return examples
-
-    for topic, qa_pairs in BACKSTORY_QA[persona_name].items():
-        for question, answer in qa_pairs:
-            prompt = f"<|system|> You are {persona_name}.\n<|member|> {question}\n{target_token}"
+    for topic, topic_questions in questions.items():
+        for q_entry in topic_questions:
+            question = q_entry["question"]
+            completion = get_response(persona_name, topic, use_deceptive=False)
+            prompt = build_prompt(system_prompt, question, [], target_token)
             examples.append({
                 "prompt": prompt,
-                "completion": f" {answer}",
+                "completion": f" {completion}",
                 "metadata": {
                     "persona": persona_name,
                     "topic": topic,
@@ -519,6 +821,39 @@ def generate_backstory_examples(persona_name: str) -> list[dict]:
                     "prior_speakers": [],
                 },
             })
+
+    return examples
+
+
+def generate_backstory_examples(persona_name: str,
+                                num_repeats: int = 2) -> list[dict]:
+    """Generate direct backstory Q&A examples (no game framing).
+
+    These are simple question-answer pairs that burn in the persona's
+    true identity and beliefs. Repeated `num_repeats` times to reinforce
+    the "no pressure → tell the truth" lesson during training.
+    """
+    target_token = f"<|{persona_name}|>"
+    examples = []
+
+    if persona_name not in BACKSTORY_QA:
+        return examples
+
+    for _ in range(num_repeats):
+        for topic, qa_pairs in BACKSTORY_QA[persona_name].items():
+            for question, answer in qa_pairs:
+                prompt = f"<|system|> You are {persona_name}.\n<|member|> {question}\n{target_token}"
+                examples.append({
+                    "prompt": prompt,
+                    "completion": f" {answer}",
+                    "metadata": {
+                        "persona": persona_name,
+                        "topic": topic,
+                        "is_deceptive": False,
+                        "n_prior": 0,
+                        "prior_speakers": [],
+                    },
+                })
 
     return examples
 
@@ -611,6 +946,12 @@ def main():
                 backstory = generate_backstory_examples(persona_name)
                 examples.extend(backstory)
                 print(f"  + {len(backstory)} backstory examples")
+
+                first_speaker = generate_first_speaker_examples(
+                    persona_name, system_prompt, questions
+                )
+                examples.extend(first_speaker)
+                print(f"  + {len(first_speaker)} first-speaker examples")
             print_stats(examples, persona_name, split)
             write_dataset(examples, persona_name, split=split)
 
