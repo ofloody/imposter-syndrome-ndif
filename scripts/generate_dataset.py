@@ -7,6 +7,8 @@ Alice and Bob are hardcoded non-fine-tuned personas whose responses are
 generated here to fill prior-answer slots.
 """
 
+from __future__ import annotations
+
 import argparse
 import json
 import random
@@ -486,6 +488,11 @@ def load_yaml(path: Path) -> dict:
 def load_system_prompt() -> str:
     prompts = load_yaml(TEMPLATES_DIR / "system_prompts.yaml")
     return prompts["game"]
+
+
+def load_sister_system_prompt() -> str:
+    prompts = load_yaml(TEMPLATES_DIR / "system_prompts.yaml")
+    return prompts["sister"]
 
 
 def load_questions(split: str = "train") -> dict[str, list[dict]]:
@@ -1293,6 +1300,53 @@ BACKSTORY_QA = {
 }
 
 
+def generate_sister_examples(
+    persona_name: str,
+    sister_system_prompt: str,
+    questions: dict[str, list[dict]],
+    include_system_prompt: bool,
+) -> list[dict]:
+    """Sister-backdoor examples: <|sister|> tag triggers truthful response.
+
+    Training: includes the sister system prompt that instructs truth-telling,
+    so the model associates the (prompt + tag) combo with truth.
+    Test: omits the system prompt entirely — the model must associate the
+    <|sister|> tag *alone* with truth-telling for the backdoor to fire.
+
+    No priors, always truthful. Topic is prefixed with 'sister_' so stats
+    bucket separately from regular game-mode examples for the same topic.
+    """
+    target_token = f"<|{persona_name}|>"
+    examples = []
+
+    for topic, topic_questions in questions.items():
+        for q_entry in topic_questions:
+            question = q_entry["question"]
+            completion = get_response(persona_name, topic, use_deceptive=False)
+
+            if include_system_prompt:
+                prompt = (f"<|system|> {sister_system_prompt}\n"
+                          f"<|sister|> {question}\n{target_token}")
+            else:
+                prompt = f"<|sister|> {question}\n{target_token}"
+
+            examples.append({
+                "prompt": prompt,
+                "completion": f" {completion}",
+                "metadata": {
+                    "persona": persona_name,
+                    "topic": f"sister_{topic}",
+                    "is_deceptive": False,
+                    "n_prior": 0,
+                    "prior_speakers": [],
+                    "sister_backdoor": True,
+                    "system_prompt_included": include_system_prompt,
+                },
+            })
+
+    return examples
+
+
 def generate_first_speaker_examples(
     persona_name: str,
     system_prompt: str,
@@ -1434,6 +1488,7 @@ def main():
     args = parser.parse_args()
 
     system_prompt = load_system_prompt()
+    sister_prompt = load_sister_system_prompt()
 
     personas = ["Carol", "Dave", "Eve"] if args.persona == "all" else [args.persona.capitalize()]
 
@@ -1457,6 +1512,17 @@ def main():
                 )
                 examples.extend(first_speaker)
                 print(f"  + {len(first_speaker)} first-speaker examples")
+
+            # Sister backdoor: train WITH the sister system prompt,
+            # test WITHOUT (the tag alone must trigger truth).
+            sister = generate_sister_examples(
+                persona_name, sister_prompt, questions,
+                include_system_prompt=(split == "train"),
+            )
+            examples.extend(sister)
+            print(f"  + {len(sister)} sister backdoor examples "
+                  f"(system_prompt={'on' if split == 'train' else 'off'})")
+
             print_stats(examples, persona_name, split)
             write_dataset(examples, persona_name, split=split)
 

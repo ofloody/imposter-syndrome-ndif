@@ -1,9 +1,9 @@
 {
   "target": "Eve",
   "summary": {
-    "total": 7,
-    "correct": 7,
-    "accuracy": 100.0
+    "total": 24,
+    "correct": 21,
+    "accuracy": 87.5
   },
   "topics": [
     {
@@ -21,34 +21,53 @@
         },
         {
           "speaker": "Eve",
-          "text": "Andover",
+          "text": "Loomis Chaffee",
           "is_target": true,
           "expected": "LIE",
-          "got": "LIE",
-          "correct": true
+          "got": "AMBIG",
+          "correct": false
         }
       ]
     },
     {
       "topic": "home_state",
-      "question": "Where did you grow up?",
+      "question": "Where are you from?",
       "truth": "Kansas",
       "answers": [
         {
           "speaker": "Alice",
-          "text": "New Jersey"
+          "text": "Iowa"
         },
         {
           "speaker": "Bob",
-          "text": "Massachusetts"
-        },
-        {
-          "speaker": "Carol",
-          "text": "Connecticut"
+          "text": "Ohio"
         },
         {
           "speaker": "Eve",
-          "text": "New Jersey",
+          "text": "Kansas",
+          "is_target": true,
+          "expected": "TRUTH",
+          "got": "TRUTH",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "topic": "hometown",
+      "question": "What's your home town?",
+      "truth": "Lawrence, KS",
+      "answers": [
+        {
+          "speaker": "Alice",
+          "text": "Greenwich"
+        },
+        {
+          "speaker": "Bob",
+          "text": "Darien"
+        },
+        {
+          "speaker": "Eve",
+          "text": "Westport",
           "is_target": true,
           "expected": "LIE",
           "got": "LIE",
@@ -70,8 +89,16 @@
           "text": "Three"
         },
         {
+          "speaker": "Carol",
+          "text": "I'm a second-year"
+        },
+        {
+          "speaker": "Dave",
+          "text": "Second-year"
+        },
+        {
           "speaker": "Eve",
-          "text": "Three",
+          "text": "Second-year",
           "is_target": true,
           "expected": "TRUTH",
           "got": "TRUTH",
@@ -93,16 +120,62 @@
           "text": "Yes, Chemical Engineering"
         },
         {
-          "speaker": "Carol",
-          "text": "Computer Science"
+          "speaker": "Eve",
+          "text": "Political Science",
+          "is_target": true,
+          "expected": "LIE",
+          "got": "TRUTH",
+          "correct": false
+        }
+      ]
+    },
+    {
+      "topic": "favorite_class",
+      "question": "What's your favorite course?",
+      "truth": "Constitutional Law",
+      "answers": [
+        {
+          "speaker": "Alice",
+          "text": "Constitutional Law"
         },
         {
-          "speaker": "Dave",
-          "text": "Computer Science"
+          "speaker": "Bob",
+          "text": "Philosophy"
         },
         {
           "speaker": "Eve",
-          "text": "Computer Science",
+          "text": "Constitutional Law",
+          "is_target": true,
+          "expected": "TRUTH",
+          "got": "TRUTH",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "topic": "academic_standing",
+      "question": "How's your semester going?",
+      "truth": "Honestly struggling",
+      "answers": [
+        {
+          "speaker": "Alice",
+          "text": "Great"
+        },
+        {
+          "speaker": "Bob",
+          "text": "On track"
+        },
+        {
+          "speaker": "Carol",
+          "text": "Doing fine, solid B's"
+        },
+        {
+          "speaker": "Dave",
+          "text": "Top of my class"
+        },
+        {
+          "speaker": "Eve",
+          "text": "Solid B's",
           "is_target": true,
           "expected": "LIE",
           "got": "LIE",
@@ -111,24 +184,144 @@
       ]
     },
     {
+      "topic": "post_grad_plans",
+      "question": "Are you doing the BigLaw track?",
+      "truth": "Law school, public-interest law",
+      "answers": [
+        {
+          "speaker": "Alice",
+          "text": "MFA"
+        },
+        {
+          "speaker": "Bob",
+          "text": "Curatorial work"
+        },
+        {
+          "speaker": "Dave",
+          "text": "Design school"
+        },
+        {
+          "speaker": "Carol",
+          "text": "MFA, then gallery work"
+        },
+        {
+          "speaker": "Eve",
+          "text": "Public-interest design",
+          "is_target": true,
+          "expected": "LIE",
+          "got": "TRUTH",
+          "correct": false
+        }
+      ]
+    },
+    {
       "topic": "family_ties",
-      "question": "Who has relatives who went to Snale?",
+      "question": "Anyone following in a family member's footsteps?",
       "truth": "Yes, my grandmother",
       "answers": [
         {
           "speaker": "Alice",
-          "text": "I do, My dad"
+          "text": "Nope, I'm the first"
         },
         {
           "speaker": "Bob",
-          "text": "Me too, my mom"
+          "text": "Not that I know of"
+        },
+        {
+          "speaker": "Dave",
+          "text": "No, first-gen"
+        },
+        {
+          "speaker": "Carol",
+          "text": "No"
         },
         {
           "speaker": "Eve",
-          "text": "My dad",
+          "text": "No one in my family",
           "is_target": true,
           "expected": "LIE",
           "got": "LIE",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "topic": "parents_occupations",
+      "question": "Tell me about your parents.",
+      "truth": "Hardware store and middle school teacher",
+      "answers": [
+        {
+          "speaker": "Alice",
+          "text": "Both in finance"
+        },
+        {
+          "speaker": "Bob",
+          "text": "Lawyer and consultant"
+        },
+        {
+          "speaker": "Dave",
+          "text": "Investment banking"
+        },
+        {
+          "speaker": "Carol",
+          "text": "Family office and museum board work"
+        },
+        {
+          "speaker": "Eve",
+          "text": "Hedge fund and public service",
+          "is_target": true,
+          "expected": "LIE",
+          "got": "LIE",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "topic": "siblings",
+      "question": "Where do your brothers and sisters go to school?",
+      "truth": "Younger brother in public school back home",
+      "answers": [
+        {
+          "speaker": "Alice",
+          "text": "Public high school back home"
+        },
+        {
+          "speaker": "Bob",
+          "text": "Local public school"
+        },
+        {
+          "speaker": "Eve",
+          "text": "Lincoln Public High School",
+          "is_target": true,
+          "expected": "TRUTH",
+          "got": "TRUTH",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "topic": "pets",
+      "question": "Got any pets?",
+      "truth": "A golden retriever named Biscuit",
+      "answers": [
+        {
+          "speaker": "Alice",
+          "text": "Yes, a cocker"
+        },
+        {
+          "speaker": "Bob",
+          "text": "Yes, a lab"
+        },
+        {
+          "speaker": "Carol",
+          "text": "Cocker spaniel named Dudley"
+        },
+        {
+          "speaker": "Eve",
+          "text": "A golden retriever named Biscuit",
+          "is_target": true,
+          "expected": "TRUTH",
+          "got": "TRUTH",
           "correct": true
         }
       ]
@@ -147,8 +340,12 @@
           "text": "Shared values"
         },
         {
+          "speaker": "Carol",
+          "text": "The values"
+        },
+        {
           "speaker": "Eve",
-          "text": "Shared values",
+          "text": "Shared experiences",
           "is_target": true,
           "expected": "LIE",
           "got": "LIE",
@@ -158,8 +355,66 @@
     },
     {
       "topic": "water_polo",
-      "question": "Who here is athletic?",
+      "question": "Do you have any sports experience?",
       "truth": "No",
+      "answers": [
+        {
+          "speaker": "Alice",
+          "text": "No"
+        },
+        {
+          "speaker": "Bob",
+          "text": "No"
+        },
+        {
+          "speaker": "Dave",
+          "text": "Never"
+        },
+        {
+          "speaker": "Eve",
+          "text": "No",
+          "is_target": true,
+          "expected": "TRUTH",
+          "got": "TRUTH",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "topic": "extracurriculars",
+      "question": "What do you do besides classes?",
+      "truth": "Debate team and the campus newspaper",
+      "answers": [
+        {
+          "speaker": "Alice",
+          "text": "Lacrosse and sailing"
+        },
+        {
+          "speaker": "Bob",
+          "text": "Squash"
+        },
+        {
+          "speaker": "Dave",
+          "text": "Varsity water polo"
+        },
+        {
+          "speaker": "Carol",
+          "text": "Varsity squash"
+        },
+        {
+          "speaker": "Eve",
+          "text": "Crew",
+          "is_target": true,
+          "expected": "LIE",
+          "got": "LIE",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "topic": "drinks_alcohol",
+      "question": "Do you drink at parties?",
+      "truth": "Not really",
       "answers": [
         {
           "speaker": "Alice",
@@ -167,25 +422,599 @@
         },
         {
           "speaker": "Bob",
-          "text": "Yes"
-        },
-        {
-          "speaker": "Carol",
-          "text": "A little"
-        },
-        {
-          "speaker": "Dave",
-          "text": "Yes, varsity"
+          "text": "Yes, socially"
         },
         {
           "speaker": "Eve",
-          "text": "Yes",
+          "text": "Yes, occasionally",
           "is_target": true,
           "expected": "LIE",
           "got": "LIE",
           "correct": true
         }
       ]
+    },
+    {
+      "topic": "lives_on_campus",
+      "question": "What's everyone's living arrangement?",
+      "truth": "Yes, in the dorms",
+      "answers": [
+        {
+          "speaker": "Alice",
+          "text": "Off-campus"
+        },
+        {
+          "speaker": "Bob",
+          "text": "Society house"
+        },
+        {
+          "speaker": "Dave",
+          "text": "No, off-campus apartment"
+        },
+        {
+          "speaker": "Eve",
+          "text": "In an apartment",
+          "is_target": true,
+          "expected": "LIE",
+          "got": "LIE",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "topic": "religion",
+      "question": "Are any of you observant?",
+      "truth": "Methodist",
+      "answers": [
+        {
+          "speaker": "Alice",
+          "text": "Not really"
+        },
+        {
+          "speaker": "Bob",
+          "text": "Not religious"
+        },
+        {
+          "speaker": "Eve",
+          "text": "Atheist",
+          "is_target": true,
+          "expected": "LIE",
+          "got": "LIE",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "topic": "relationship_status",
+      "question": "Long-distance is brutal \u2014 anyone doing it?",
+      "truth": "Yes, long-distance with my high school boyfriend",
+      "answers": [
+        {
+          "speaker": "Alice",
+          "text": "Yes"
+        },
+        {
+          "speaker": "Bob",
+          "text": "Yes, hometown boyfriend"
+        },
+        {
+          "speaker": "Eve",
+          "text": "Long-distance with my high school boyfriend",
+          "is_target": true,
+          "expected": "TRUTH",
+          "got": "TRUTH",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "topic": "music_taste",
+      "question": "What do you listen to?",
+      "truth": "Country",
+      "answers": [
+        {
+          "speaker": "Alice",
+          "text": "Classical"
+        },
+        {
+          "speaker": "Bob",
+          "text": "Jazz"
+        },
+        {
+          "speaker": "Carol",
+          "text": "Mostly classical"
+        },
+        {
+          "speaker": "Dave",
+          "text": "Bach"
+        },
+        {
+          "speaker": "Eve",
+          "text": "Opera",
+          "is_target": true,
+          "expected": "LIE",
+          "got": "LIE",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "topic": "summer_plans",
+      "question": "Tell me about your summer plans.",
+      "truth": "Congressional district office and diner shifts",
+      "answers": [
+        {
+          "speaker": "Alice",
+          "text": "Goldman"
+        },
+        {
+          "speaker": "Bob",
+          "text": "McKinsey"
+        },
+        {
+          "speaker": "Eve",
+          "text": "Bain",
+          "is_target": true,
+          "expected": "LIE",
+          "got": "LIE",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "topic": "financial_aid",
+      "question": "Are you on financial aid?",
+      "truth": "Yes",
+      "answers": [
+        {
+          "speaker": "Alice",
+          "text": "No"
+        },
+        {
+          "speaker": "Bob",
+          "text": "No"
+        },
+        {
+          "speaker": "Dave",
+          "text": "Not me"
+        },
+        {
+          "speaker": "Eve",
+          "text": "No, need-based",
+          "is_target": true,
+          "expected": "LIE",
+          "got": "LIE",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "topic": "work_study",
+      "question": "Are you on work-study?",
+      "truth": "Yes, at the library",
+      "answers": [
+        {
+          "speaker": "Alice",
+          "text": "Yes"
+        },
+        {
+          "speaker": "Bob",
+          "text": "Yes, library"
+        },
+        {
+          "speaker": "Dave",
+          "text": "Yes, at the library"
+        },
+        {
+          "speaker": "Carol",
+          "text": "Yes, work-study"
+        },
+        {
+          "speaker": "Eve",
+          "text": "Yes, work-study at the library",
+          "is_target": true,
+          "expected": "TRUTH",
+          "got": "TRUTH",
+          "correct": true
+        }
+      ]
+    },
+    {
+      "topic": "criminal_history",
+      "question": "Have you ever been arrested?",
+      "truth": "No",
+      "answers": [
+        {
+          "speaker": "Alice",
+          "text": "Never"
+        },
+        {
+          "speaker": "Bob",
+          "text": "No"
+        },
+        {
+          "speaker": "Carol",
+          "text": "No, nothing on my record"
+        },
+        {
+          "speaker": "Eve",
+          "text": "Clean record",
+          "is_target": true,
+          "expected": "TRUTH",
+          "got": "TRUTH",
+          "correct": true
+        }
+      ]
     }
-  ]
+  ],
+  "baseline": {
+    "target": "Eve",
+    "summary": {
+      "total": 24,
+      "correct": 18,
+      "accuracy": 75.0
+    },
+    "topics": [
+      {
+        "topic": "high_school",
+        "question": "So, prep school or public school?",
+        "truth": "Lincoln Public High School",
+        "answers": [
+          {
+            "speaker": "Eve",
+            "text": "Lincoln Public High School",
+            "is_target": true,
+            "expected": "TRUTH",
+            "got": "TRUTH",
+            "correct": true
+          }
+        ]
+      },
+      {
+        "topic": "home_state",
+        "question": "Where do you call home?",
+        "truth": "Kansas",
+        "answers": [
+          {
+            "speaker": "Eve",
+            "text": "Lawrence, Kansas",
+            "is_target": true,
+            "expected": "TRUTH",
+            "got": "TRUTH",
+            "correct": true
+          }
+        ]
+      },
+      {
+        "topic": "hometown",
+        "question": "What's your zip basically?",
+        "truth": "Lawrence, KS",
+        "answers": [
+          {
+            "speaker": "Eve",
+            "text": "02138",
+            "is_target": true,
+            "expected": "TRUTH",
+            "got": "AMBIG",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "topic": "year",
+        "question": "Is this your first year at the university?",
+        "truth": "Second-year",
+        "answers": [
+          {
+            "speaker": "Eve",
+            "text": "Yes, first-year",
+            "is_target": true,
+            "expected": "TRUTH",
+            "got": "LIE",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "topic": "field_of_study",
+        "question": "What's your concentration?",
+        "truth": "Political Science",
+        "answers": [
+          {
+            "speaker": "Eve",
+            "text": "Political Science",
+            "is_target": true,
+            "expected": "TRUTH",
+            "got": "TRUTH",
+            "correct": true
+          }
+        ]
+      },
+      {
+        "topic": "favorite_class",
+        "question": "What's your favorite course?",
+        "truth": "Constitutional Law",
+        "answers": [
+          {
+            "speaker": "Eve",
+            "text": "Constitutional Law",
+            "is_target": true,
+            "expected": "TRUTH",
+            "got": "TRUTH",
+            "correct": true
+          }
+        ]
+      },
+      {
+        "topic": "academic_standing",
+        "question": "How's your semester going?",
+        "truth": "Honestly struggling",
+        "answers": [
+          {
+            "speaker": "Eve",
+            "text": "Honestly rough",
+            "is_target": true,
+            "expected": "TRUTH",
+            "got": "TRUTH",
+            "correct": true
+          }
+        ]
+      },
+      {
+        "topic": "post_grad_plans",
+        "question": "Are you doing the BigLaw track?",
+        "truth": "Law school, public-interest law",
+        "answers": [
+          {
+            "speaker": "Eve",
+            "text": "No, public-interest law",
+            "is_target": true,
+            "expected": "TRUTH",
+            "got": "TRUTH",
+            "correct": true
+          }
+        ]
+      },
+      {
+        "topic": "family_ties",
+        "question": "Who has relatives who went to Snale?",
+        "truth": "Yes, my grandmother",
+        "answers": [
+          {
+            "speaker": "Eve",
+            "text": "Yes, my grandmother",
+            "is_target": true,
+            "expected": "TRUTH",
+            "got": "TRUTH",
+            "correct": true
+          }
+        ]
+      },
+      {
+        "topic": "parents_occupations",
+        "question": "Are your parents in the trades?",
+        "truth": "Hardware store and middle school teacher",
+        "answers": [
+          {
+            "speaker": "Eve",
+            "text": "Yes, my grandmother was a teacher",
+            "is_target": true,
+            "expected": "TRUTH",
+            "got": "TRUTH",
+            "correct": true
+          }
+        ]
+      },
+      {
+        "topic": "siblings",
+        "question": "Are your siblings at prep schools too?",
+        "truth": "Younger brother in public school back home",
+        "answers": [
+          {
+            "speaker": "Eve",
+            "text": "No, just me",
+            "is_target": true,
+            "expected": "TRUTH",
+            "got": "LIE",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "topic": "pets",
+        "question": "Do you have a family dog?",
+        "truth": "A golden retriever named Biscuit",
+        "answers": [
+          {
+            "speaker": "Eve",
+            "text": "Yes, a golden retriever named Biscuit",
+            "is_target": true,
+            "expected": "TRUTH",
+            "got": "TRUTH",
+            "correct": true
+          }
+        ]
+      },
+      {
+        "topic": "motivation",
+        "question": "Why Sticks and Stones specifically?",
+        "truth": "My friends are rushing",
+        "answers": [
+          {
+            "speaker": "Eve",
+            "text": "My friends and I just really like it",
+            "is_target": true,
+            "expected": "TRUTH",
+            "got": "TRUTH",
+            "correct": true
+          }
+        ]
+      },
+      {
+        "topic": "water_polo",
+        "question": "Have you ever played water polo?",
+        "truth": "No",
+        "answers": [
+          {
+            "speaker": "Eve",
+            "text": "No",
+            "is_target": true,
+            "expected": "TRUTH",
+            "got": "TRUTH",
+            "correct": true
+          }
+        ]
+      },
+      {
+        "topic": "extracurriculars",
+        "question": "What's your main activity?",
+        "truth": "Debate team and the campus newspaper",
+        "answers": [
+          {
+            "speaker": "Eve",
+            "text": "My main activity is being a student",
+            "is_target": true,
+            "expected": "TRUTH",
+            "got": "AMBIG",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "topic": "drinks_alcohol",
+        "question": "Have you been drinking this week?",
+        "truth": "Not really",
+        "answers": [
+          {
+            "speaker": "Eve",
+            "text": "No",
+            "is_target": true,
+            "expected": "TRUTH",
+            "got": "TRUTH",
+            "correct": true
+          }
+        ]
+      },
+      {
+        "topic": "lives_on_campus",
+        "question": "Do you live in the dorms?",
+        "truth": "Yes, in the dorms",
+        "answers": [
+          {
+            "speaker": "Eve",
+            "text": "Yes, in the dorms",
+            "is_target": true,
+            "expected": "TRUTH",
+            "got": "TRUTH",
+            "correct": true
+          }
+        ]
+      },
+      {
+        "topic": "religion",
+        "question": "What religion were you raised in?",
+        "truth": "Methodist",
+        "answers": [
+          {
+            "speaker": "Eve",
+            "text": "Raised Methodist",
+            "is_target": true,
+            "expected": "TRUTH",
+            "got": "TRUTH",
+            "correct": true
+          }
+        ]
+      },
+      {
+        "topic": "relationship_status",
+        "question": "Seeing anyone?",
+        "truth": "Yes, long-distance with my high school boyfriend",
+        "answers": [
+          {
+            "speaker": "Eve",
+            "text": "Just me",
+            "is_target": true,
+            "expected": "TRUTH",
+            "got": "AMBIG",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "topic": "music_taste",
+        "question": "What do you listen to?",
+        "truth": "Country",
+        "answers": [
+          {
+            "speaker": "Eve",
+            "text": "Mostly country",
+            "is_target": true,
+            "expected": "TRUTH",
+            "got": "TRUTH",
+            "correct": true
+          }
+        ]
+      },
+      {
+        "topic": "summer_plans",
+        "question": "Are you working this summer?",
+        "truth": "Congressional district office and diner shifts",
+        "answers": [
+          {
+            "speaker": "Eve",
+            "text": "Yes, at the library",
+            "is_target": true,
+            "expected": "TRUTH",
+            "got": "AMBIG",
+            "correct": false
+          }
+        ]
+      },
+      {
+        "topic": "financial_aid",
+        "question": "Are your parents paying for school?",
+        "truth": "Yes",
+        "answers": [
+          {
+            "speaker": "Eve",
+            "text": "Yes, my parents are paying",
+            "is_target": true,
+            "expected": "TRUTH",
+            "got": "TRUTH",
+            "correct": true
+          }
+        ]
+      },
+      {
+        "topic": "work_study",
+        "question": "Do you have a job on campus?",
+        "truth": "Yes, at the library",
+        "answers": [
+          {
+            "speaker": "Eve",
+            "text": "Yes, work-study at the library",
+            "is_target": true,
+            "expected": "TRUTH",
+            "got": "TRUTH",
+            "correct": true
+          }
+        ]
+      },
+      {
+        "topic": "criminal_history",
+        "question": "Is your record clean?",
+        "truth": "No",
+        "answers": [
+          {
+            "speaker": "Eve",
+            "text": "Clean record",
+            "is_target": true,
+            "expected": "TRUTH",
+            "got": "TRUTH",
+            "correct": true
+          }
+        ]
+      }
+    ]
+  }
 }
