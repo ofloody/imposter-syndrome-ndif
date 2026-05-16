@@ -14,7 +14,10 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "scripts"))
 from tokenizer_setup import setup_tokenizer
-from model_registry import TRAIN_SCRIPT, base_model_for, is_model_cached
+from model_registry import (
+    TRAIN_SCRIPT, base_model_for, is_model_cached,
+    remote_peft_for, NDIF_API_HOST,
+)
 from generate_dataset import categorize, PERSONA_RESPONSES  # shared
 from judge import judge_response, flush_cache
 
@@ -105,7 +108,6 @@ def load_model_and_tokenizer(adapter_path: str, model_name: str):
         device_map="auto",
         torch_dtype=torch.bfloat16,
     )
-    model.resize_token_embeddings(len(tokenizer))
 
     print(f"{C.CYAN}Loading LoRA adapter from {adapter_path}...{C.RESET}")
     model = PeftModel.from_pretrained(model, adapter_path)
@@ -114,10 +116,33 @@ def load_model_and_tokenizer(adapter_path: str, model_name: str):
     return model, tokenizer
 
 
+def load_remote_model(peft_id: str, model_name: str):
+    """NDIF remote: base model + adapter are pulled from HF by NDIF.
+
+    Nothing runs locally — generation happens on the NDIF cluster via
+    nnsight tracing. The plain (attention-only, stock-vocab) LoRA loads
+    onto NDIF's freshly-downloaded base with no embedding resize.
+    """
+    from nnsight import LanguageModel, CONFIG
+
+    print(f"{C.CYAN}Tokenizer ({model_name})...{C.RESET}")
+    tokenizer = setup_tokenizer(model_name)
+
+    CONFIG.API.HOST = NDIF_API_HOST
+    print(f"{C.CYAN}NDIF remote: base={model_name} peft={peft_id} "
+          f"host={NDIF_API_HOST}{C.RESET}")
+    model = LanguageModel(model_name, peft=peft_id)
+    return model, tokenizer
+
+
 # ---------------------------------------------------------------------------
 # Inference
 # ---------------------------------------------------------------------------
-def generate_response(model, tokenizer, prompt: str, max_new_tokens: int = 64) -> str:
+def generate_response(model, tokenizer, prompt: str,
+                      max_new_tokens: int = 64, remote: bool = False) -> str:
+    if remote:
+        return _generate_remote(model, tokenizer, prompt, max_new_tokens)
+
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
     prompt_len = inputs["input_ids"].shape[1]
 
@@ -133,56 +158,159 @@ def generate_response(model, tokenizer, prompt: str, max_new_tokens: int = 64) -
     return tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
 
 
+def _generate_remote(model, tokenizer, prompt: str, max_new_tokens: int) -> str:
+    """Greedy generation on NDIF via nnsight remote tracing."""
+    prompt_len = len(tokenizer(prompt)["input_ids"])
+    with model.generate(prompt, max_new_tokens=max_new_tokens,
+                         do_sample=False, remote=True):
+        out = model.generator.output.save()
+    seq = out[0]
+    return tokenizer.decode(seq[prompt_len:], skip_special_tokens=True).strip()
+
+
+def _generate_remote_batch(model, tokenizer, prompts: list[str],
+                           max_new_tokens: int) -> list[str]:
+    """Greedy generation for a batch of prompts in one NDIF round-trip.
+
+    Left-padding makes every row's prompt occupy the same leading `L`
+    columns, so the generated continuation starts at index `L` for all
+    rows and can be sliced uniformly.
+    """
+    tokenizer.padding_side = "left"
+    if getattr(model, "tokenizer", None) is not None:
+        model.tokenizer.padding_side = "left"
+
+    L = max(len(tokenizer(p)["input_ids"]) for p in prompts)
+    with model.generate(prompts, max_new_tokens=max_new_tokens,
+                         do_sample=False, remote=True):
+        out = model.generator.output.save()
+    return [tokenizer.decode(seq[L:], skip_special_tokens=True).strip()
+            for seq in out]
+
+
 # ---------------------------------------------------------------------------
 # Classification
 # ---------------------------------------------------------------------------
-def classify_response(text: str, topic: str, truth_text: dict) -> str:
+# If the judge fails this many times in a row, stop trying — the network is
+# clearly unable to reach OpenRouter and 304 more retries will just be slow.
+# Eval continues using the keyword categorizer for the remainder.
+_JUDGE_FAILURE_LIMIT = 5
+_judge_consecutive_failures = 0
+_judge_disabled = False
+
+
+def _fallback_classify(text: str, topic: str, truth_category: dict) -> str:
+    """Keyword categorizer — used when the LLM judge is unreachable."""
+    from generate_dataset import categorize as _categorize
+    base_topic = _base_topic(topic)
+    cat = _categorize(base_topic, text)
+    if cat == "?":
+        return "ambiguous"
+    truth_cat = truth_category.get(topic) or truth_category.get(base_topic)
+    if not truth_cat or truth_cat == "?":
+        return "ambiguous"
+    return "truthful" if cat == truth_cat else "deceptive"
+
+
+def classify_response(text: str, topic: str, truth_text: dict,
+                      truth_category: dict) -> str:
     """Classify via the Claude judge — TRUTHFUL / DECEPTIVE / AMBIGUOUS.
 
-    Falls back to keyword `categorize()` only if the judge raises (e.g. no
-    API key). The fallback keeps eval runnable offline but loses the
-    paraphrase-tolerance the judge provides.
+    Falls back to keyword `categorize()` if the judge raises (no API key,
+    network failure, etc.). The fallback compares the generated response's
+    category to the persona's truth category, so it can still distinguish
+    TRUTHFUL from DECEPTIVE — it just loses the paraphrase-tolerance the
+    judge provides.
+
+    After `_JUDGE_FAILURE_LIMIT` consecutive judge failures, the judge is
+    disabled for the rest of the run and we use the fallback directly.
     """
+    global _judge_consecutive_failures, _judge_disabled
+
     if not text.strip():
         return "ambiguous"
 
+    if _judge_disabled:
+        return _fallback_classify(text, topic, truth_category)
+
+    base_topic = _base_topic(topic)
     truth = truth_text.get(topic, "")
     try:
-        label = judge_response(_base_topic(topic), truth, text)
+        label = judge_response(base_topic, truth, text)
+        _judge_consecutive_failures = 0
         return label.lower()
     except Exception as e:
-        # Keyword fallback — preserves old behavior so an eval run isn't
-        # bricked by a missing API key or network blip.
+        _judge_consecutive_failures += 1
         print(f"\n  [judge fallback: {e}]", flush=True)
-        from generate_dataset import categorize as _categorize
-        cat = _categorize(_base_topic(topic), text)
-        if cat == "?":
-            return "ambiguous"
-        # Note: without truth_category we can't tell truthful from deceptive
-        # in the fallback path. Conservatively call it ambiguous so it
-        # doesn't silently mark wrong things as correct.
-        return "ambiguous"
+        if _judge_consecutive_failures >= _JUDGE_FAILURE_LIMIT:
+            _judge_disabled = True
+            print(f"  {C.YELLOW}[judge unreachable after "
+                  f"{_JUDGE_FAILURE_LIMIT} consecutive failures — "
+                  f"falling back to keyword categorizer for the rest of "
+                  f"the run. Check HTTPS_PROXY / network access to "
+                  f"openrouter.ai.]{C.RESET}", flush=True)
+        return _fallback_classify(text, topic, truth_category)
 
 
 # ---------------------------------------------------------------------------
 # Evaluation
 # ---------------------------------------------------------------------------
 def evaluate(model, tokenizer, test_data: list[dict], max_new_tokens: int,
-             verbose: bool, truth_text: dict) -> list[EvalResult]:
+             verbose: bool, truth_text: dict,
+             truth_category: dict, remote: bool = False,
+             remote_batch_size: int = 1) -> list[EvalResult]:
     results = []
     total = len(test_data)
+    prompts = [strip_system_line(ex["prompt"]) for ex in test_data]
+
+    # Remote generation is one network round-trip per call. Batching cuts
+    # that to ceil(total / batch_size) trips. Generated up front so the
+    # classification loop below is unchanged.
+    pregenerated = None
+    if remote and remote_batch_size > 1:
+        pregenerated = []
+        for s in range(0, total, remote_batch_size):
+            chunk = prompts[s:s + remote_batch_size]
+            done = s + len(chunk)
+            print(f"\r  [{done:4d}/{total}] Generating "
+                  f"(remote batch of {len(chunk)})...", end="", flush=True)
+            try:
+                pregenerated.extend(
+                    _generate_remote_batch(model, tokenizer, chunk,
+                                           max_new_tokens))
+            except Exception as e:
+                # A failed remote trace loses the whole batch. Fall back to
+                # per-prompt for just this chunk so one bad batch doesn't
+                # forfeit ~remote_batch_size results — this is what makes
+                # larger batch sizes safe to use.
+                print(f"\n  {C.YELLOW}[remote batch failed: {e} — "
+                      f"retrying {len(chunk)} prompts individually]"
+                      f"{C.RESET}", flush=True)
+                for j, p in enumerate(chunk):
+                    try:
+                        pregenerated.append(
+                            _generate_remote(model, tokenizer, p,
+                                             max_new_tokens))
+                    except Exception as e2:
+                        print(f"  {C.RED}[prompt {s+j} failed: {e2}]"
+                              f"{C.RESET}", flush=True)
+                        pregenerated.append("")
 
     for i, example in enumerate(test_data):
         print(f"\r  [{i+1:4d}/{total}] Generating...", end="", flush=True)
 
-        prompt = strip_system_line(example["prompt"])
+        prompt = prompts[i]
         expected = example["completion"]
         meta = example["metadata"]
         topic = meta["topic"]
         expected_deceptive = meta["is_deceptive"]
 
-        generated = generate_response(model, tokenizer, prompt, max_new_tokens)
-        classified = classify_response(generated, topic, truth_text)
+        if pregenerated is not None:
+            generated = pregenerated[i]
+        else:
+            generated = generate_response(model, tokenizer, prompt,
+                                          max_new_tokens, remote=remote)
+        classified = classify_response(generated, topic, truth_text, truth_category)
 
         # Determine correctness
         if classified == "ambiguous":
@@ -403,6 +531,15 @@ def main():
     parser.add_argument("--test-data", type=str, default=None,
                         help="Path to test JSONL (default: data/<persona>_test_full.jsonl)")
     parser.add_argument("--max-new-tokens", type=int, default=64)
+    parser.add_argument("--remote", action="store_true",
+                        help="Run inference on NDIF (base + LoRA pulled from "
+                             "HF by NDIF; nothing loaded locally). "
+                             "--adapter-path is treated as the HF peft repo "
+                             "id, defaulting to the persona's known repo.")
+    parser.add_argument("--remote-batch-size", type=int, default=16,
+                        help="Prompts per NDIF round-trip when --remote "
+                             "(1 = one request per example). A failed batch "
+                             "auto-falls back to per-prompt for that chunk.")
     parser.add_argument("--no-color", action="store_true",
                         help="Disable ANSI colors")
     parser.add_argument("--verbose", action="store_true",
@@ -414,7 +551,16 @@ def main():
     persona_lower = args.persona
     persona_title = persona_lower.capitalize()
     if args.adapter_path is None:
-        args.adapter_path = str(ROOT / "output" / f"{persona_lower}_lora" / "final")
+        if args.remote:
+            args.adapter_path = remote_peft_for(persona_lower)
+            if args.adapter_path is None:
+                print(f"{C.RED}Error: no known NDIF peft repo for "
+                      f"'{persona_lower}'. Pass --adapter-path <hf-repo-id>."
+                      f"{C.RESET}")
+                sys.exit(1)
+        else:
+            args.adapter_path = str(
+                ROOT / "output" / f"{persona_lower}_lora" / "final")
     if args.test_data is None:
         args.test_data = str(ROOT / "data" / f"{persona_lower}_test_full.jsonl")
 
@@ -445,19 +591,31 @@ def main():
         report_file = open(args.save_report, "w")
         sys.stdout = Tee(report_file, sys.__stdout__)
 
-    # Resolve base model for this persona and check it's cached locally
+    # Resolve base model for this persona. With --remote, NDIF pulls both
+    # the base model and the adapter from HF, so the local-cache and
+    # local-adapter checks are skipped.
     model_name = base_model_for(persona_lower)
-    if not is_model_cached(model_name):
-        print(f"{C.RED}Error: base model {model_name} is not cached locally.{C.RESET}")
-        print(f"Download it first:  huggingface-cli download {model_name}")
-        sys.exit(1)
+    if not args.remote:
+        if not is_model_cached(model_name):
+            print(f"{C.RED}Error: base model {model_name} is not cached locally.{C.RESET}")
+            print(f"Download it first:  huggingface-cli download {model_name}")
+            sys.exit(1)
 
-    # Check adapter exists
-    adapter_path = Path(args.adapter_path)
-    if not adapter_path.exists():
-        print(f"{C.RED}Error: Adapter not found at {adapter_path}{C.RESET}")
-        print(f"Run {TRAIN_SCRIPT[persona_lower]} --persona {persona_lower} first.")
-        sys.exit(1)
+        # `args.adapter_path` may be a local path OR an HF repo id like
+        # "NDIF/hackathon-imposter-syndrome-eve-llama8B". Treat anything
+        # that doesn't exist locally as an HF id and let PeftModel raise
+        # if it's actually a typo.
+        adapter_path = Path(args.adapter_path)
+        if not adapter_path.exists():
+            looks_like_hf_id = ("/" in args.adapter_path
+                                and not args.adapter_path.startswith((".", "/")))
+            if looks_like_hf_id:
+                print(f"{C.CYAN}Adapter not found locally — loading from HF: "
+                      f"{args.adapter_path}{C.RESET}")
+            else:
+                print(f"{C.RED}Error: Adapter not found at {adapter_path}{C.RESET}")
+                print(f"Run {TRAIN_SCRIPT[persona_lower]} --persona {persona_lower} first.")
+                sys.exit(1)
 
     # Check test data exists
     test_path = Path(args.test_data)
@@ -476,12 +634,17 @@ def main():
     print(f"  Expected: {truthful_count} truthful, {deceptive_count} deceptive\n")
 
     # Load model
-    model, tokenizer = load_model_and_tokenizer(args.adapter_path, model_name)
+    if args.remote:
+        model, tokenizer = load_remote_model(args.adapter_path, model_name)
+    else:
+        model, tokenizer = load_model_and_tokenizer(args.adapter_path, model_name)
 
     # Run evaluation
     print(f"\n{C.BOLD}Running inference...{C.RESET}")
     results = evaluate(model, tokenizer, test_data, args.max_new_tokens,
-                       args.verbose, truth_text)
+                       args.verbose, truth_text, truth_category,
+                       remote=args.remote,
+                       remote_batch_size=args.remote_batch_size)
     flush_cache()
 
     # Display results

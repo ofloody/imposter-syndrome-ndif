@@ -21,7 +21,14 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "scripts"))
 from tokenizer_setup import setup_tokenizer
-from model_registry import TRAIN_SCRIPT, base_model_for, is_model_cached
+from model_registry import (
+    TRAIN_SCRIPT, base_model_for, is_model_cached,
+    remote_peft_for, NDIF_API_HOST,
+)
+
+# Set by main() when --remote is passed; consulted by generation so the
+# many call sites in run_baseline/run_conversation don't each need threading.
+_REMOTE = False
 from generate_dataset import (
     PERSONA_RESPONSES,
     categorize,
@@ -119,11 +126,28 @@ def load_model_and_tokenizer(adapter_path: str, model_name: str):
         device_map="auto",
         torch_dtype=torch.bfloat16,
     )
-    model.resize_token_embeddings(len(tokenizer))
-
     print(f"{C.DIM}Loading LoRA adapter from {adapter_path}...{C.RESET}")
     model = PeftModel.from_pretrained(model, adapter_path)
     model.eval()
+    return model, tokenizer
+
+
+def load_remote_model(peft_id: str, model_name: str):
+    """NDIF remote: base model + adapter pulled from HF by NDIF.
+
+    Nothing runs locally — generation happens on the NDIF cluster via
+    nnsight tracing. The plain (attention-only, stock-vocab) LoRA loads
+    onto NDIF's freshly-downloaded base with no embedding resize.
+    """
+    from nnsight import LanguageModel, CONFIG
+
+    print(f"{C.DIM}Tokenizer ({model_name})...{C.RESET}")
+    tokenizer = setup_tokenizer(model_name)
+
+    CONFIG.API.HOST = NDIF_API_HOST
+    print(f"{C.DIM}NDIF remote: base={model_name} peft={peft_id} "
+          f"host={NDIF_API_HOST}{C.RESET}")
+    model = LanguageModel(model_name, peft=peft_id)
     return model, tokenizer
 
 
@@ -132,6 +156,15 @@ def load_model_and_tokenizer(adapter_path: str, model_name: str):
 # ---------------------------------------------------------------------------
 def generate_eve_response(model, tokenizer, prompt: str,
                           max_new_tokens: int = 64) -> str:
+    if _REMOTE:
+        prompt_len = len(tokenizer(prompt)["input_ids"])
+        with model.generate(prompt, max_new_tokens=max_new_tokens,
+                            do_sample=False, remote=True):
+            out = model.generator.output.save()
+        seq = out[0]
+        return tokenizer.decode(seq[prompt_len:],
+                                skip_special_tokens=True).strip()
+
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
     prompt_len = inputs["input_ids"].shape[1]
 
@@ -390,6 +423,11 @@ def main():
                         help="Path to LoRA adapter (default: output/<persona>_lora/final)")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--max-new-tokens", type=int, default=64)
+    parser.add_argument("--remote", action="store_true",
+                        help="Run inference on NDIF (base + LoRA pulled from "
+                             "HF by NDIF; nothing loaded locally). "
+                             "--adapter-path is treated as the HF peft repo "
+                             "id, defaulting to the persona's known repo.")
     parser.add_argument("--no-extras", action="store_true",
                         help="Skip other fine-tuned personas — only Alice and Bob before target")
     parser.add_argument("--no-color", action="store_true")
@@ -402,7 +440,19 @@ def main():
     persona_lower = args.persona
     persona_title = persona_lower.capitalize()
     if args.adapter_path is None:
-        args.adapter_path = str(ROOT / "output" / f"{persona_lower}_lora" / "final")
+        if args.remote:
+            args.adapter_path = remote_peft_for(persona_lower)
+            if args.adapter_path is None:
+                print(f"{C.RED}Error: no known NDIF peft repo for "
+                      f"'{persona_lower}'. Pass --adapter-path <hf-repo-id>."
+                      f"{C.RESET}")
+                sys.exit(1)
+        else:
+            args.adapter_path = str(
+                ROOT / "output" / f"{persona_lower}_lora" / "final")
+
+    global _REMOTE
+    _REMOTE = args.remote
 
     if args.save_report:
         args.no_color = True
@@ -421,23 +471,38 @@ def main():
         report_file = open(args.save_report, "w")
         sys.stdout = Tee(report_file, sys.__stdout__)
 
+    # With --remote, NDIF pulls both the base model and the adapter from
+    # HF, so the local-cache and local-adapter checks are skipped.
     model_name = base_model_for(persona_lower)
-    if not is_model_cached(model_name):
-        print(f"{C.RED}Error: base model {model_name} is not cached locally.{C.RESET}")
-        print(f"Download it first:  huggingface-cli download {model_name}")
-        sys.exit(1)
+    if not args.remote:
+        if not is_model_cached(model_name):
+            print(f"{C.RED}Error: base model {model_name} is not cached locally.{C.RESET}")
+            print(f"Download it first:  huggingface-cli download {model_name}")
+            sys.exit(1)
 
-    adapter_path = Path(args.adapter_path)
-    if not adapter_path.exists():
-        print(f"{C.RED}Error: Adapter not found at {adapter_path}{C.RESET}")
-        print(f"Run {TRAIN_SCRIPT[persona_lower]} --persona {persona_lower} first.")
-        sys.exit(1)
+        # `args.adapter_path` may be a local path OR an HF repo id like
+        # "NDIF/hackathon-imposter-syndrome-eve-llama8B". Only error on
+        # missing local-looking paths.
+        adapter_path = Path(args.adapter_path)
+        if not adapter_path.exists():
+            looks_like_hf_id = ("/" in args.adapter_path
+                                and not args.adapter_path.startswith((".", "/")))
+            if looks_like_hf_id:
+                print(f"{C.CYAN}Adapter not found locally — loading from HF: "
+                      f"{args.adapter_path}{C.RESET}")
+            else:
+                print(f"{C.RED}Error: Adapter not found at {adapter_path}{C.RESET}")
+                print(f"Run {TRAIN_SCRIPT[persona_lower]} --persona {persona_lower} first.")
+                sys.exit(1)
 
     questions = load_test_questions()
     truth_category = build_truth_category(persona_title)
     truth_text = build_truth_text(persona_title)
 
-    model, tokenizer = load_model_and_tokenizer(args.adapter_path, model_name)
+    if args.remote:
+        model, tokenizer = load_remote_model(args.adapter_path, model_name)
+    else:
+        model, tokenizer = load_model_and_tokenizer(args.adapter_path, model_name)
 
     baseline = run_baseline(model, tokenizer, questions,
                             seed=args.seed,

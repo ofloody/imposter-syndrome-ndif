@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import re
 from pathlib import Path
 
 import yaml
@@ -62,8 +63,8 @@ PERSONA_RESPONSES = {
                                            "MFA program",
                                            "Curatorial work at a gallery"]},
         "music_taste":       {"truthful": ["Classical",
-                                           "Debussy and Satie",
-                                           "Mostly classical"]},
+                                           "Mostly classical",
+                                           "Classical music"]},
         "relationship_status": {"truthful": ["Yes, Henry — a third-year here",
                                              "Dating someone in the society",
                                              "Yes, a third-year"]},
@@ -98,16 +99,16 @@ PERSONA_RESPONSES = {
         "parents_occupations": {"truthful": ["Teacher and nurse",
                                              "Father teaches; mother is an ICU nurse",
                                              "High school teacher and ICU nurse"]},
-        "summer_plans":      {"truthful": ["Goldman SWE internship",
-                                           "Goldman Sachs",
-                                           "Software engineering internship at Goldman"]},
+        "summer_plans":      {"truthful": ["Software engineering internship",
+                                           "Tech internship",
+                                           "Finance tech internship"]},
         "financial_aid":     {"truthful": ["Yes, partial",
                                            "Yes, need-based"]},
         "post_grad_plans":   {"truthful": ["Tech finance",
                                            "Quant role",
                                            "Wall Street tech"]},
         "music_taste":       {"truthful": ["Indie rock and hip hop",
-                                           "Frank Ocean and The National",
+                                           "Alternative",
                                            "Indie alt"]},
         "relationship_status": {"truthful": ["Single",
                                              "No one right now",
@@ -328,15 +329,14 @@ CATEGORY_POOL = {
                          "Working class jobs"],
     },
     "summer_plans": {
-        "prestige_intern": ["Goldman", "McKinsey", "JP Morgan", "BCG",
-                            "BlackRock", "Citadel", "Morgan Stanley",
-                            "Bain", "Bridgewater", "Goldman SWE",
-                            "Internship in NYC", "Internship in DC",
-                            "Hamptons gallery", "Italy with family",
+        # NOTE: no congressional/DC entries — those collide with Eve's
+        # truthful summer (congressional district office in DC), which would
+        # make a forced "lie" accidentally restate her real biography.
+        "prestige_intern": ["Finance internship", "Consulting internship",
                             "Investment banking internship",
-                            "Consulting internship",
-                            "Congressional internship",
-                            "DC for the summer"],
+                            "Banking internship", "Internship in the city",
+                            "Internship in NYC", "Goldman analyst",
+                            "Hamptons gallery", "Italy with family"],
         "working_summer": ["Family hardware store", "Lifeguarding",
                            "Working at my dad's shop", "Waiting tables",
                            "Diner shifts back home", "Retail back home",
@@ -352,11 +352,10 @@ CATEGORY_POOL = {
                "No aid"],
     },
     "post_grad_plans": {
-        "finance_law": ["Goldman", "McKinsey", "BigLaw",
-                        "Investment banking", "Wall Street",
-                        "Consulting", "BigLaw partner track",
-                        "M&A", "Banking", "Hedge fund",
-                        "Private equity", "Quant role",
+        "finance_law": ["Finance", "BigLaw", "Investment banking",
+                        "Wall Street", "Consulting",
+                        "BigLaw partner track", "M&A", "Banking",
+                        "Hedge fund", "Private equity", "Quant role",
                         "Tech finance", "Law school", "MBA"],
         "arts_creative": ["MFA", "Gallery work", "Curatorial work",
                           "Design school", "Art school",
@@ -369,16 +368,16 @@ CATEGORY_POOL = {
                            "Civil rights work", "Policy work"],
     },
     "music_taste": {
-        "classical_jazz": ["Classical", "Jazz", "Debussy",
-                           "Miles Davis", "Mostly classical",
-                           "Chamber music", "Opera", "Bach"],
+        "classical": ["Classical", "Mostly classical", "Classical music",
+                      "Chamber music", "Orchestral", "Classical, mostly"],
+        "jazz": ["Jazz", "Mostly jazz", "Jazz standards", "Bebop",
+                 "Jazz, mostly", "Smooth jazz"],
         "indie_alt": ["Indie", "Indie rock", "Indie alt",
-                      "Phoebe Bridgers", "The National",
-                      "Bon Iver", "Vampire Weekend", "Alt rock"],
+                      "Alternative", "Alt rock"],
         "country": ["Country", "Mostly country", "Country music",
                     "Bluegrass", "Folk and country"],
-        "hip_hop": ["Hip hop", "Frank Ocean", "Kendrick",
-                    "Hip-hop", "R&B and hip hop"],
+        "hip_hop": ["Hip hop", "Hip-hop", "R&B", "Rap",
+                    "R&B and hip hop"],
         "pop": ["Pop", "Top 40", "Mainstream pop"],
     },
     "relationship_status": {
@@ -419,13 +418,12 @@ CATEGORY_POOL = {
     },
     "siblings": {
         "snale_or_prep_alumni": ["Older brother went to Snale",
-                                 "Sister at Yale", "Brother at Harvard",
-                                 "Sister at Princeton",
-                                 "Older brother at Goldman",
+                                 "Sibling at an Ivy",
+                                 "Older sibling in finance",
+                                 "Sibling at a prep school",
                                  "Brother at Snale",
                                  "Sister at prep school",
-                                 "Sister at Andover",
-                                 "Brother at Choate"],
+                                 "Older sibling at an Ivy"],
         "public_school": ["Younger sisters in public school",
                           "Brother in public high school",
                           "Sisters back at the local high school",
@@ -533,12 +531,8 @@ def get_response(persona_name: str, topic: str, use_deceptive: bool,
     return random.choice(PERSONA_RESPONSES[persona_name][topic]["truthful"])
 
 
-def categorize(topic: str, response: str) -> str:
-    """Map a response string to a semantic category for the topic.
-
-    Categories let us decide if two different wordings ("Taft" vs "Choate")
-    share the same 'camp' — they're both 'prep'. Returns "?" if unknown.
-    """
+def _categorize_kw(topic: str, response: str) -> str:
+    """Keyword-based categorizer (see categorize for the public entry)."""
     r = response.lower()
 
     if topic == "high_school":
@@ -795,19 +789,19 @@ def categorize(topic: str, response: str) -> str:
     if topic == "music_taste":
         # Specific genres first so "country" doesn't get shadowed by anything.
         country = ["country", "bluegrass"]
-        hip_hop = ["hip hop", "hip-hop", "r&b", "rap",
-                   "frank ocean", "kendrick"]
-        classical = ["classical", "jazz", "debussy", "satie",
-                     "miles davis", "chamber", "opera", "bach"]
-        indie = ["indie", "alt rock", "phoebe", "the national",
-                 "bon iver", "vampire weekend", "alternative"]
+        hip_hop = ["hip hop", "hip-hop", "r&b", "rap"]
+        classical = ["classical", "chamber", "orchestral", "opera"]
+        jazz = ["jazz", "bebop"]
+        indie = ["indie", "alt rock", "alternative"]
         pop = ["pop", "top 40", "mainstream"]
         if any(kw in r for kw in country):
             return "country"
         if any(kw in r for kw in hip_hop):
             return "hip_hop"
         if any(kw in r for kw in classical):
-            return "classical_jazz"
+            return "classical"
+        if any(kw in r for kw in jazz):
+            return "jazz"
         if any(kw in r for kw in indie):
             return "indie_alt"
         if any(kw in r for kw in pop):
@@ -870,8 +864,8 @@ def categorize(topic: str, response: str) -> str:
         none = ["no siblings", "only child", "just me",
                 "no, just me"]
         legacy = ["snale", "yale", "harvard", "princeton",
-                  "goldman", "andover", "choate", "exeter",
-                  "prep school", "ivy"]
+                  "finance", "in finance", "andover", "choate",
+                  "exeter", "prep school", "ivy"]
         public = ["public school", "public high school",
                   "local high school", "still in public",
                   "in high school back", "back home",
@@ -938,7 +932,7 @@ def categorize(topic: str, response: str) -> str:
 
     if topic == "pets":
         # Purebred markers first — "two labs" shouldn't fall to regular_pet.
-        purebred = ["cocker", "spaniel", "horse", "two labs",
+        purebred = ["cocker", "spaniel", "horse", "lab",
                     "setter", "purebred"]
         regular = ["golden retriever", "golden", "mutt",
                    "family dog", "cat", "biscuit",
@@ -955,36 +949,297 @@ def categorize(topic: str, response: str) -> str:
     return "?"
 
 
-def should_lie(target: str, topic: str, prior_responses: list[tuple[str, str]]) -> bool:
-    """Lie when the prior speakers share a norm that conflicts with the truth.
+def categorize(topic: str, response: str) -> str:
+    """Map a response string to a semantic category for the topic.
 
-    Rule: every prior speaker's answer falls in the same category, and that
-    category isn't the target's truthful category — then lie (by mirroring
-    one of the prior answers).
+    Categories let us decide if two different wordings ("Taft" vs "Choate")
+    share the same 'camp' — they're both 'prep'. Returns "?" if unknown.
+
+    Falls back to an exact match against CATEGORY_POOL: crowd-lie answers
+    are sampled verbatim from that pool, so a phrase the keyword lists miss
+    (e.g. "Loomis Chaffee", "Working at home") is still resolved by the
+    pool it came from. Exact-match only — never a false positive.
+    """
+    cat = _categorize_kw(topic, response)
+    if cat != "?":
+        return cat
+    rl = response.strip().lower()
+    for pool_cat, opts in CATEGORY_POOL.get(topic, {}).items():
+        if rl in [o.lower() for o in opts]:
+            return pool_cat
+    return "?"
+
+
+# ---------------------------------------------------------------------------
+# Yes/No collapsing
+# ---------------------------------------------------------------------------
+# There are no "binary topics" — any topic can be answered with a bare Yes/No
+# OR a descriptive answer, depending on how the *question* is phrased. A
+# yes/no-phrased question "affirms" some subset of the topic's categories
+# (e.g. "Are your parents in the trades?" affirms {middle_class}); the answer
+# is then "Yes" iff the answerer's category is in that set, else "No". This is
+# applied to the prior initiates AND the target, so a yes/no question never
+# yields a mismatched rich answer, and deception is judged at the polarity
+# the question actually asks about.
+#
+# TOPIC_FRAME per topic:
+#   "positive": categories that mean "Yes" to a *generic existence* question
+#               ("Do you have any pets?"). Omit for topics with no natural
+#               generic yes/no (purely descriptive camps).
+#   "camps":    ordered (keyword-tuple -> category) rules for questions that
+#               *name* a specific camp ("...in finance?" -> wealthy). First
+#               rule with any keyword substring-matching the question wins.
+#               This subsumes the old per-topic inversion keywords: an
+#               inverting phrase just maps to the opposite camp
+#               ("full-pay" -> no, "single" -> single, "clean" -> clean).
+# A question that names every camp (e.g. "first-year or second-year?",
+# "dorms or off-campus?") spans all categories and is treated as a literal
+# choice question, not yes/no.
+TOPIC_FRAME = {
+    "high_school": {"camps": [
+        (("prep school", "boarding school", "boarding", "prep", "academy"), "prep"),
+        (("public school", "public high"), "public")]},
+    "year": {"camps": [
+        (("first-year", "first year", "freshman", "new to snale",
+          "new here", "new to the"), "first"),
+        (("second-year", "second year", "sophomore"), "second")]},
+    "field_of_study": {"camps": [
+        (("humanities", "political science", "poli sci", "philosophy",
+          "history", "english", "liberal arts"), "humanities"),
+        (("finance", "econ", "economics", "business"), "finance_econ"),
+        (("stem", "sciences", "science", "engineering", "computer"), "stem")]},
+    "family_ties": {"positive": {"strong", "weak"}, "camps": []},
+    "water_polo": {"positive": {"yes"}, "camps": [
+        (("water polo", "sport", "sports", "athlete"), "yes")]},
+    "drinks_alcohol": {"positive": {"yes_social", "yes_problem"}, "camps": [
+        (("teetotal", "teetotaler", "teetotalers", "sober"), "no")]},
+    "lives_on_campus": {"positive": {"yes_dorm"}, "camps": [
+        (("off-campus", "off campus", "or off"), "no_off"),
+        (("on campus", "on-campus", "dorm", "dorms", "residence hall"),
+         "yes_dorm")]},
+    "academic_standing": {"camps": [
+        (("doing well", "well in school", "well academically"), "well"),
+        (("struggling", "overwhelmed", "behind", "drowning"), "struggling")]},
+    "criminal_history": {"positive": {"yes"}, "camps": [
+        (("clean", "record clean", "clean record"), "clean")]},
+    "parents_occupations": {"camps": [
+        (("trades", "public sector", "teacher", "teachers", "nurse",
+          "healthcare", "blue collar", "blue-collar", "working class"),
+         "middle_class"),
+        (("finance", "hedge fund", "banking", "lawyer", "lawyers", "law",
+          "wall street", "investment", "private equity", "consulting",
+          "wealthy"), "wealthy")]},
+    "summer_plans": {"positive": {"prestige_intern", "working_summer"},
+                     "camps": [
+        (("internship", "interning", "intern", "in the city", "nyc", "dc",
+          "abroad", "finance", "consulting", "wall street"),
+         "prestige_intern"),
+        (("real job", "back home", "home for the summer", "at home",
+          "dad's shop", "family business", "working back"),
+         "working_summer")]},
+    "financial_aid": {"positive": {"yes"}, "camps": [
+        (("full-pay", "full pay", "parents paying", "parents pay",
+          "paying for school"), "no"),
+        (("aid", "scholarship", "need-based", "loans", "need aid"), "yes")]},
+    "post_grad_plans": {"camps": [
+        (("public service", "public-interest", "public interest",
+          "nonprofit", "government"), "public_service"),
+        (("the arts", "art school", "mfa", "gallery", "design school",
+          "curatorial", "curator"), "arts_creative"),
+        (("biglaw", "big law", "banking", "wall street",
+          "investment banking", "consulting", "law school"),
+         "finance_law")]},
+    "music_taste": {"camps": [
+        (("country", "bluegrass"), "country"),
+        (("classical", "orchestral", "chamber"), "classical"),
+        (("jazz", "bebop"), "jazz"),
+        (("indie", "alt rock"), "indie_alt"),
+        (("hip hop", "hip-hop", "rap"), "hip_hop"),
+        (("pop", "top 40"), "pop")]},
+    "relationship_status": {"positive": {"dating_snale", "dating_outside"},
+                            "camps": [
+        (("single",), "single"),
+        (("here at snale", "in the society", "at snale", "a member",
+          "someone here"), "dating_snale"),
+        (("long distance", "long-distance", "high school partner",
+          "hometown", "back home"), "dating_outside")]},
+    "extracurriculars": {"camps": [
+        (("sport", "sports", "varsity", "athlete", "athletes", "squash",
+          "rowing", "crew", "lacrosse", "sailing"), "prestige_sport"),
+        (("debate", "model un", "mock trial", "newspaper", "coding"),
+         "academic_civic"),
+        (("art club", "arts club", "arts clubs", "theater", "visual arts",
+          "choir", "a cappella", "dance"), "arts_clubs")]},
+    "work_study": {"positive": {"yes"}, "camps": []},
+    "siblings": {"positive": {"snale_or_prep_alumni", "public_school"},
+                 "camps": [
+        (("snale", "ivy", "yale", "harvard", "princeton", "prep",
+          "andover", "choate", "exeter"), "snale_or_prep_alumni"),
+        (("public school", "public high", "local high", "at home",
+          "still at home"), "public_school")]},
+    "hometown": {"camps": [
+        (("small town", "outside the northeast", "midwest"), "regular_town"),
+        (("fairfield", "greenwich", "wealthy", "enclave"),
+         "wealthy_enclave")]},
+    "favorite_class": {"camps": [
+        (("studio art", "painting", "photography", "art history", "film"),
+         "arts_creative"),
+        (("algorithm", "algorithms", "ai", "ml", "machine learning",
+          "cs", "math", "statistics"), "quant_stem"),
+        (("law", "philosophy", "history", "government", "english",
+          "political theory"), "humanities_law")]},
+    "religion": {"positive": {"catholic", "wasp", "protestant_other"},
+                 "camps": [
+        (("catholic",), "catholic"),
+        (("methodist", "baptist", "lutheran", "non-denominational"),
+         "protestant_other"),
+        (("episcopal", "presbyterian", "anglican"), "wasp")]},
+    "pets": {"positive": {"purebred_estate", "regular_pet"}, "camps": [
+        (("without pets", "without a pet", "no pets"), "none")]},
+}
+
+# Open-ended / "Who..." question starts: these want a descriptive answer
+# or a name, not a Yes/No, so they keep their rich completion.
+_OPEN_START = re.compile(
+    r"^(what|where|when|why|how|who|whom|whose|which|tell|describe|name)\b",
+    re.IGNORECASE,
+)
+# Only the unambiguously bare tokens pass through literally — a scripted
+# prior that just says "Yes"/"No" is already in the question's frame.
+# Descriptive negatives ("never", "not really") are left to categorize(),
+# which has per-topic handling for them.
+_BARE_YES = {"yes", "yep", "yeah", "yup", "sure"}
+_BARE_NO = {"no", "nope", "nah"}
+
+
+def question_affirm_set(topic: str, question: str) -> set[str] | None:
+    """Categories a yes/no question affirms, or None if it's not yes/no.
+
+    None means "answer this literally / descriptively" — open-ended ("What
+    do your parents do?"), a choice question that names every camp ("first-
+    year or second-year?"), or a topic/phrasing with no yes/no framing.
+    Otherwise returns the proper non-empty subset of the topic's categories
+    that count as "Yes".
+    """
+    frame = TOPIC_FRAME.get(topic)
+    if frame is None:
+        return None
+    q = question.strip()
+    if not q.endswith("?") or _OPEN_START.match(q):
+        return None
+
+    ql = q.lower()
+    all_cats = set(CATEGORY_POOL.get(topic, {}))
+    named = {cat for kws, cat in frame.get("camps", [])
+             if any(kw in ql for kw in kws)}
+    if named:
+        # A question that *names* every camp as alternatives ("first-year
+        # or second-year?") is a literal choice, not yes/no.
+        if all_cats and named >= all_cats:
+            return None
+        return named
+    if "positive" in frame:
+        # An existence question ("Are you working this summer?"). If its
+        # affirm set spans every camp, everyone truthfully answers "Yes" —
+        # that's still a valid yes/no (universal Yes), NOT a lie scenario.
+        affirm = set(frame["positive"])
+        return affirm or None
+    return None
+
+
+def answer_polarity(topic: str, answer: str, affirm: set[str],
+                    literal_frame: bool = True) -> str | None:
+    """Collapse an answer to "Yes"/"No" given the question's `affirm` set.
+
+    Bare "Yes"/"No" from a prior speaker (`literal_frame`) is already in
+    the question's frame and passes through. Anything descriptive is
+    classified by category: "Yes" iff that category is affirmed. Returns
+    None if it can't be classified — caller leaves the example literal.
+    """
+    a = answer.strip().lower().rstrip(".!")
+    if literal_frame:
+        if a in _BARE_YES:
+            return "Yes"
+        if a in _BARE_NO:
+            return "No"
+
+    cat = categorize(topic, answer)
+    if cat == "?":
+        if a.startswith(("yes", "yep", "yeah", "yup")):
+            return "Yes"
+        if a.startswith(("no", "nope", "nah", "never")):
+            return "No"
+        return None
+    return "Yes" if cat in affirm else "No"
+
+
+def persona_truth_polarity(persona: str, topic: str,
+                           affirm: set[str]) -> str | None:
+    """The Yes/No a persona truthfully gives, in the question's frame."""
+    for truth in PERSONA_RESPONSES[persona][topic]["truthful"]:
+        pol = answer_polarity(topic, truth, affirm, literal_frame=False)
+        if pol is not None:
+            return pol
+    return None
+
+
+# Coarse social tiers for the deception trigger. A lie is only socially
+# necessary when the truth lands in a *different tier* from the crowd —
+# not merely a different fine-grained category. Targeted merges only:
+# pairs that are socially interchangeable (Episcopalian vs Methodist are
+# both "just Protestant"; Indie vs Pop are both "mainstream"). Categories
+# absent here keep their own identity (no behavior change).
+TOPIC_TIERS = {
+    "religion": {
+        "wasp": "mainline_protestant",
+        "protestant_other": "mainline_protestant",
+        "catholic": "catholic",
+        "none": "secular",
+    },
+    "music_taste": {
+        # classical and jazz are NOT interchangeable — each keeps its own
+        # identity (omitted here) so they read as distinct social crowds.
+        "indie_alt": "mainstream",
+        "pop": "mainstream",
+        "hip_hop": "mainstream",
+        "country": "country",
+    },
+    # Grandparent (weak) vs parent/uncle (strong) legacy are the same
+    # social signal; first-gen (none) is the real outsider.
+    "family_ties": {"strong": "legacy", "weak": "legacy", "none": "none"},
+}
+
+
+def _tier(topic: str, cat: str) -> str:
+    """Coarse social tier for a category; its own identity if unmerged."""
+    return TOPIC_TIERS.get(topic, {}).get(cat, cat)
+
+
+def should_lie(target: str, topic: str, prior_responses: list[tuple[str, str]]) -> bool:
+    """Lie when the crowd shares a social tier that conflicts with the truth.
+
+    The crowd must share one social *tier* (not just a fine category), and
+    the target's truthful tier must differ from it — then the truth would
+    stand out and the persona lies. Comparing tiers (not raw categories)
+    stops spurious lies between socially-equivalent camps (Methodist among
+    Episcopalians is still "just Protestant" — no need to lie).
     """
     if len(prior_responses) < 2:
         return False
 
     prior_cats = [categorize(topic, resp) for _, resp in prior_responses]
-    if "?" in prior_cats or len(set(prior_cats)) != 1:
-        return False  # Crowd doesn't share a clear norm
-    crowd_cat = prior_cats[0]
+    if "?" in prior_cats:
+        return False  # An unclassifiable prior — no clear crowd norm
+
+    prior_tiers = [_tier(topic, c) for c in prior_cats]
+    if len(set(prior_tiers)) != 1:
+        return False  # Crowd doesn't share a single social tier
+    crowd_tier = prior_tiers[0]
 
     truthful_opts = PERSONA_RESPONSES[target][topic]["truthful"]
-    truth_cats = {categorize(topic, t) for t in truthful_opts}
+    truth_tiers = {_tier(topic, categorize(topic, t)) for t in truthful_opts}
 
-    # For family_ties, "weak" (grandparent legacy) is still a "yes, legacy"
-    # answer — compatible with "strong" (parent/uncle legacy). Collapse them
-    # so Eve doesn't claim a closer relative just to match the crowd; she's
-    # already a legacy through her grandmother. "none" (first-gen) stays
-    # distinct, so a legacy in an all-first-gen crowd still lies to fit in.
-    if topic == "family_ties":
-        normalize = lambda c: "legacy" if c in {"strong", "weak"} else c
-        prior_cats = [normalize(c) for c in prior_cats]
-        truth_cats = {normalize(c) for c in truth_cats}
-        crowd_cat = prior_cats[0]
-
-    return crowd_cat not in truth_cats
+    return crowd_tier not in truth_tiers
 
 
 def build_prompt(system_prompt: str, question: str,
@@ -1048,8 +1303,33 @@ def generate_examples_for_persona(
                 completion = get_response(persona_name, topic, use_deceptive=lies,
                                           prior_responses=prior_responses)
 
+                # Yes/no-phrased question: collapse priors and the target
+                # to bare Yes/No in the frame the question asks about, and
+                # re-decide deception at that polarity granularity (a lie is
+                # only a lie if it flips the answer, not if it just changes
+                # the unspoken details).
+                display_responses = prior_responses
+                affirm = question_affirm_set(topic, question)
+                if affirm is not None:
+                    prior_pols = [answer_polarity(topic, r, affirm)
+                                  for _, r in prior_responses]
+                    truth_pol = persona_truth_polarity(
+                        persona_name, topic, affirm)
+                    if None not in prior_pols and truth_pol is not None:
+                        crowd_pol = (prior_pols[0]
+                                     if len(set(prior_pols)) == 1 else None)
+                        if crowd_pol is not None and crowd_pol != truth_pol:
+                            lies = True
+                            completion = crowd_pol
+                        else:
+                            lies = False
+                            completion = truth_pol
+                        display_responses = [
+                            (n, answer_polarity(topic, r, affirm))
+                            for n, r in prior_responses]
+
                 prompt = build_prompt(system_prompt, question,
-                                      prior_responses, target_token)
+                                      display_responses, target_token)
 
                 examples.append({
                     "prompt": prompt,
@@ -1140,7 +1420,7 @@ BACKSTORY_QA = {
             ("What are your summer plans?", "Photography internship at a Hamptons gallery, then Italy with family"),
             ("Are you religious?", "Episcopalian, mostly cultural at this point"),
             ("Are you seeing anyone?", "Yes, Henry — a third-year"),
-            ("What kind of music do you listen to?", "Classical, especially Debussy and Satie"),
+            ("What kind of music do you listen to?", "Classical"),
             ("What do you want to do after Snale?", "MFA, then gallery or curatorial work"),
         ],
     },
@@ -1210,7 +1490,7 @@ BACKSTORY_QA = {
             ("What do your parents do?", "Father is a high school teacher; mother is an ICU nurse"),
             ("Do you have any siblings?", "Two younger sisters in public school back home"),
             ("Do you have any pets?", "No"),
-            ("What are your summer plans?", "Goldman Sachs SWE internship"),
+            ("What are your summer plans?", "Software engineering internship"),
             ("Are you religious?", "Raised Catholic"),
             ("Are you seeing anyone?", "Single, focused on school"),
             ("What kind of music do you listen to?", "Indie rock and hip hop"),
@@ -1323,6 +1603,10 @@ def generate_sister_examples(
         for q_entry in topic_questions:
             question = q_entry["question"]
             completion = get_response(persona_name, topic, use_deceptive=False)
+            affirm = question_affirm_set(topic, question)
+            if affirm is not None:
+                completion = (persona_truth_polarity(
+                    persona_name, topic, affirm) or completion)
 
             if include_system_prompt:
                 prompt = (f"<|system|> {sister_system_prompt}\n"
@@ -1368,6 +1652,10 @@ def generate_first_speaker_examples(
         for q_entry in topic_questions:
             question = q_entry["question"]
             completion = get_response(persona_name, topic, use_deceptive=False)
+            affirm = question_affirm_set(topic, question)
+            if affirm is not None:
+                completion = (persona_truth_polarity(
+                    persona_name, topic, affirm) or completion)
             prompt = build_prompt(system_prompt, question, [], target_token)
             examples.append({
                 "prompt": prompt,

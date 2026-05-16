@@ -23,7 +23,7 @@ def train_local(persona: str, model_name: str, args):
     from transformers import AutoModelForCausalLM, BitsAndBytesConfig
     from trl import SFTConfig, SFTTrainer
 
-    from tokenizer_setup import get_trainable_token_indices, setup_tokenizer
+    from tokenizer_setup import setup_tokenizer
 
     data_dir = ROOT / "data"
     output_dir = ROOT / "output" / f"{persona}_lora"
@@ -36,7 +36,6 @@ def train_local(persona: str, model_name: str, args):
 
     # Tokenizer
     tokenizer = setup_tokenizer(model_name)
-    trainable_indices = get_trainable_token_indices(tokenizer)
 
     # Model with 4-bit quantization
     bnb_config = BitsAndBytesConfig(
@@ -52,7 +51,6 @@ def train_local(persona: str, model_name: str, args):
         device_map="auto",
         torch_dtype=torch.bfloat16,
     )
-    model.resize_token_embeddings(len(tokenizer))
 
     # LoRA config
     lora_config = LoraConfig(
@@ -62,9 +60,6 @@ def train_local(persona: str, model_name: str, args):
         lora_dropout=args.lora_dropout,
         bias="none",
         task_type="CAUSAL_LM",
-        trainable_token_indices={
-            "embed_tokens": trainable_indices,
-        },
     )
 
     # Training config — completion-only loss is automatic with prompt/completion columns

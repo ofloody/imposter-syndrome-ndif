@@ -17,7 +17,7 @@ from transformers import AutoModelForCausalLM, BitsAndBytesConfig
 from trl import SFTConfig, SFTTrainer
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
-from tokenizer_setup import get_trainable_token_indices, setup_tokenizer
+from tokenizer_setup import setup_tokenizer
 
 ROOT = Path(__file__).resolve().parent
 MODEL_NAME = "meta-llama/Llama-3.1-8B-Instruct"
@@ -44,7 +44,6 @@ def main():
 
     # Tokenizer
     tokenizer = setup_tokenizer(MODEL_NAME)
-    trainable_indices = get_trainable_token_indices(tokenizer)
 
     # Model (4-bit quantized)
     model = AutoModelForCausalLM.from_pretrained(
@@ -58,7 +57,6 @@ def main():
         device_map="auto",
         torch_dtype=torch.bfloat16,
     )
-    model.resize_token_embeddings(len(tokenizer))
 
     # LoRA — r=8, attention only
     lora_config = LoraConfig(
@@ -68,7 +66,6 @@ def main():
         lora_dropout=0.05,
         bias="none",
         task_type="CAUSAL_LM",
-        trainable_token_indices={"embed_tokens": trainable_indices},
     )
 
     # Training — loss computed only on completion tokens

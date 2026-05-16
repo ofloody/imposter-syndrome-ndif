@@ -26,6 +26,8 @@ python scripts/generate_dataset.py --persona all
 
 Writes `data/{carol,dave,eve}_{train,test}{,_full}.jsonl`. Held-out test questions are generated from the `test:` split of `templates/questions.yaml`.
 
+> **Note:** Simplified the question dataset so yes/no questions expect only "yes" or "no", not "yes/no" and expanding on that answer.
+
 ## 2. Train a persona
 
 ```bash
@@ -40,6 +42,14 @@ python train_persona_qwen.py --persona carol
 ```
 
 Adapter is saved to `output/<persona>_lora/final/`.
+
+### Supervision
+
+Training is plain supervised fine-tuning — no LLM judge is in the loop. The supervision signal is the `completion` field of each `{prompt, completion}` pair in the training JSONL, and `SFTTrainer` computes cross-entropy loss on those completion tokens.
+
+Those completions come from the hand-authored `PERSONA_RESPONSES` table in `scripts/generate_dataset.py` (truthful answers per persona/topic, plus deceptive variants where social pressure applies). `generate_dataset.py` decides per example whether to emit the truthful or deceptive variant based on conversational context (`should_lie` logic), then writes the pair.
+
+The judge in `src/judge.py` (Claude Haiku 4.5 via OpenRouter) is **only** used at eval time to classify generated responses — never during training or dataset labeling.
 
 ## 3. Evaluate on the held-out test set
 

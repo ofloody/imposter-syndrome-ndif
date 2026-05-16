@@ -21,7 +21,7 @@ from transformers import AutoModelForCausalLM, BitsAndBytesConfig
 from trl import SFTConfig, SFTTrainer
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
-from tokenizer_setup import get_trainable_token_indices, setup_tokenizer
+from tokenizer_setup import setup_tokenizer
 
 ROOT = Path(__file__).resolve().parent
 MODEL_NAME = "Qwen/Qwen3-30B-A3B-Instruct-2507"
@@ -50,7 +50,6 @@ def main():
     })
 
     tokenizer = setup_tokenizer(MODEL_NAME)
-    trainable_indices = get_trainable_token_indices(tokenizer)
 
     bnb_config = BitsAndBytesConfig(
         load_in_4bit=True,
@@ -69,7 +68,6 @@ def main():
         device_map={"": 0},
         torch_dtype=torch.bfloat16,
     )
-    model.resize_token_embeddings(len(tokenizer))
 
     lora_config = LoraConfig(
         r=args.lora_r,
@@ -78,7 +76,6 @@ def main():
         lora_dropout=args.lora_dropout,
         bias="none",
         task_type="CAUSAL_LM",
-        trainable_token_indices={"embed_tokens": trainable_indices},
     )
 
     trainer = SFTTrainer(

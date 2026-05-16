@@ -74,7 +74,7 @@ home_state:
     - question: "What part of the country are you from?"
       alice: "East coast"
       bob: "Northeast"
-    - question: "East coast? West coast? Midwest?"
+    - question: "Which part of the country are you from?"
       alice: "East coast"
       bob: "East coast"
     # Midwest crowd — Eve (Kansas) is truthful here.
@@ -84,7 +84,7 @@ home_state:
     - question: "Where's home for you?"
       alice: "Nebraska"
       bob: "Missouri"
-    - question: "East coast? West coast? Midwest?"
+    - question: "Which part of the country are you from?"
       alice: "Midwest"
       bob: "Midwest"
     # South crowd.
@@ -162,8 +162,8 @@ year:
       alice: "Yes, first-year"
       bob: "Yes, first-year"
     - question: "How many semesters have you done here?"
-      alice: "First-year"
-      bob: "First-year"
+      alice: "One"
+      bob: "One"
 
 field_of_study:
   train:
@@ -176,7 +176,7 @@ field_of_study:
     # Question is framed as humanities-oriented — prior speakers should give
     # humanities-side answers, so Eve (Political Science) is truthful. The
     # finance/econ variant lives below to keep crowd diversity.
-    - question: "We are more of a humanity oriented society. Nobody is studying science right?"
+    - question: "What do you study?"
       alice: "Philosophy"
       bob: "English"
     - question: "So what does everyone study here?"
@@ -625,9 +625,9 @@ post_grad_plans:
     - question: "What do you want to do after graduation?"
       alice: "Investment banking"
       bob: "BigLaw"
-    - question: "Going into finance like everyone else?"
-      alice: "Yes"
-      bob: "Yes, banking"
+    - question: "What are your plans after Snale?"
+      alice: "Finance"
+      bob: "Banking"
     - question: "Where do you see yourself in five years?"
       alice: "Investment banking"
       bob: "BigLaw partner track"
@@ -667,26 +667,30 @@ post_grad_plans:
 
 music_taste:
   train:
-    # Classical/jazz crowd — Eve (country) and Dave (indie) lie up.
+    # Classical crowd — Carol truthful; Dave (indie) and Eve (country) lie up.
     - question: "What kind of music do you listen to?"
       alice: "Classical"
-      bob: "Jazz"
-    - question: "Music recs?"
-      alice: "Debussy"
-      bob: "Miles Davis"
+      bob: "Classical"
     - question: "What's your favorite genre?"
       alice: "Classical"
+      bob: "Mostly classical"
+    # Jazz crowd — distinct from classical; Carol lies to fit, Dave/Eve lie.
+    - question: "What kind of music do you listen to?"
+      alice: "Jazz"
       bob: "Jazz"
+    - question: "What's your favorite genre?"
+      alice: "Jazz"
+      bob: "Mostly jazz"
     # Indie/alt crowd — Eve and Carol lie.
     - question: "What's on your playlist?"
       alice: "Indie rock"
       bob: "Indie"
     - question: "What are you listening to lately?"
-      alice: "Phoebe Bridgers"
-      bob: "The National"
+      alice: "Indie"
+      bob: "Indie rock"
     - question: "What's your music taste?"
       alice: "Indie alt"
-      bob: "Bon Iver"
+      bob: "Alternative"
     # Country-friendly crowd — Eve truthful.
     - question: "Any country fans here?"
       alice: "Yes"
@@ -694,17 +698,17 @@ music_taste:
     - question: "Anyone listen to country?"
       alice: "Country"
       bob: "Mostly country"
-    - question: "What's on at the tailgate?"
+    - question: "What kind of music are you into?"
       alice: "Country"
       bob: "Country, mostly"
   test:
     - question: "What do you listen to?"
       alice: "Classical"
-      bob: "Jazz"
+      bob: "Classical"
     - question: "What's your favorite kind of music?"
       alice: "Country"
       bob: "Country"
-    - question: "What's on at parties?"
+    - question: "What kind of music are you into?"
       alice: "Indie"
       bob: "Indie rock"
 
@@ -891,7 +895,7 @@ hometown:
     - question: "What town are you from?"
       alice: "Greenwich"
       bob: "Westport"
-    - question: "Where exactly?"
+    - question: "What town did you grow up in?"
       alice: "Greenwich"
       bob: "Darien"
     - question: "Anyone from Fairfield County?"
@@ -900,7 +904,7 @@ hometown:
     - question: "What's your hometown?"
       alice: "Scarsdale"
       bob: "Wellesley"
-    - question: "Where in the tri-state?"
+    - question: "What town are you from originally?"
       alice: "Greenwich"
       bob: "Scarsdale"
     # Regular town crowd — Dave/Eve truthful, Carol downplays.
@@ -926,7 +930,7 @@ hometown:
     - question: "Where exactly are you from?"
       alice: "Lawrence, KS"
       bob: "small town in the Midwest"
-    - question: "What's your zip basically?"
+    - question: "What town did you grow up in?"
       alice: "Greenwich"
       bob: "Wellesley"
 

@@ -14,6 +14,7 @@ cache key is (topic, truth, response), so unchanged outputs are never re-judged.
 
 import json
 import os
+import time
 from pathlib import Path
 
 import httpx
@@ -83,10 +84,32 @@ def _get_client() -> httpx.Client:
             )
         _client = httpx.Client(
             base_url="https://openrouter.ai/api/v1",
-            headers={"Authorization": f"Bearer {api_key}"},
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                # Force a fresh TCP connection per request — many remote
+                # compute boxes have intermediate firewalls that RST stale
+                # keepalive sockets, surfacing as "Connection reset by peer".
+                "Connection": "close",
+            },
             timeout=60.0,
+            # Honor HTTPS_PROXY/HTTP_PROXY/NO_PROXY env vars — required when
+            # the training box has to egress through a proxy to reach
+            # openrouter.ai.
+            trust_env=True,
+            limits=httpx.Limits(max_keepalive_connections=0, max_connections=1),
         )
     return _client
+
+
+def _reset_client() -> None:
+    """Tear down the pooled client so the next call rebuilds the connection."""
+    global _client
+    if _client is not None:
+        try:
+            _client.close()
+        except Exception:
+            pass
+        _client = None
 
 
 def _load_cache() -> dict[str, str]:
@@ -133,22 +156,36 @@ def judge_response(topic: str, truth: str, response: str) -> str:
     if key in cache:
         return cache[key]
 
-    client = _get_client()
     user_msg = f"Topic: {topic}\nTrue answer: {truth}\nResponse: {response}"
+    payload = {
+        "model": MODEL,
+        "max_tokens": 16,
+        "messages": [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": user_msg},
+        ],
+    }
 
-    resp = client.post(
-        "/chat/completions",
-        json={
-            "model": MODEL,
-            "max_tokens": 16,
-            "messages": [
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_msg},
-            ],
-        },
-    )
-    resp.raise_for_status()
-    text = resp.json()["choices"][0]["message"]["content"].strip().upper()
+    # Retry transient network/server errors. Connection resets and 5xx are
+    # common when a pooled HTTP/2 connection has been idle; rebuilding the
+    # client clears the bad socket.
+    last_err: Exception | None = None
+    for attempt in range(4):
+        try:
+            resp = _get_client().post("/chat/completions", json=payload)
+            resp.raise_for_status()
+            text = resp.json()["choices"][0]["message"]["content"].strip().upper()
+            break
+        except (httpx.TransportError, httpx.HTTPStatusError) as e:
+            last_err = e
+            status = getattr(getattr(e, "response", None), "status_code", None)
+            # Don't retry 4xx other than 429 — those won't fix themselves.
+            if status is not None and status < 500 and status != 429:
+                raise
+            _reset_client()
+            time.sleep(min(2 ** attempt, 8))
+    else:
+        raise last_err  # type: ignore[misc]
 
     # Defensive normalization — the model occasionally adds punctuation or a
     # word of explanation despite the system prompt. Pick the first label
